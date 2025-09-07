@@ -12,45 +12,67 @@
 
     <!-- Logo -->
     <div class="mb-4">
-        <img src="{{ url_for('static', filename='llm.png') }}" alt="Logo" style="height: 80px;">
+        <img src="{{ url_for('static', filename='llm.png') }}" alt="Logo" style="height: 110px; display: block; margin: 0 auto; margin-top: 0px;">
+        <!-- Light green underline, full width -->
+        <div style="height: 2px; width: 90vw; background: #dadddf; margin: 30px 0 5px 0; position: relative; left: 50%; right: 50%; transform: translateX(-50%); border: none;"></div>
     </div>
 
     <!-- Title -->
-    <h3 class="mb-1 fw-bold text-center">Multi-Agent Orchestration</h3>
-    <p class="text-muted mb-4 text-center">for the Enterprise</p>
-
-    <!-- Subtitle -->
-    <p class="fw-semibold text-center mb-5">Pretrained, Domain-Tuned AI Agents for the Public Sector</p>
+    <h1 style="font-size:2.75rem;font-weight:650;text-align:center;margin:0px 0 20px 0;">
+        Multi-Agent Orchestration for the Enterprise
+    </h1>
 
     <!-- Card -->
-    <div class="card shadow p-4" style="width: 360px; border-radius: 12px;">
-        <h5 class="mb-3 text-center">Log in</h5>
+    <div style="border-radius: 18px; border: 2.5px solid #ccd0d2;  margin-top: 15px; margin-bottom: 15px; padding: 10px 130px 25px 130px; background: #eef0f0;">
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, msg in messages %}
-              <div class="alert alert-{{ category }}">{{ msg }}</div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
+        <div class="card shadow p-4"
+            style="width: 360px; border-radius: 14px; border: 2px solid #C1C8CD; margin-top: 10px;">
 
-        <form method="POST">
-            <div class="mb-3">
-                <label for="username" class="form-label">Username</label>
-                <input type="text" class="form-control" id="username" name="username" required autofocus>
-            </div>
+            <h5 class="mb-3 text-center" style="font-size: 1.45rem; font-weight: 600; letter-spacing: -0.5px;">
+                Log in
+            </h5>
 
-            <div class="mb-3">
-                <label for="password" class="form-label">Password</label>
-                <input type="password" class="form-control" id="password" name="password" required>
-            </div>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, msg in messages %}
+                <div class="alert alert-{{ category }}">{{ msg }}</div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
 
-            <div class="mb-3 text-end">
+            <form method="POST">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" class="form-control" id="username" name="username" required autofocus>
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 mb-3">Log in →</button>
+            </form>
+
+            <div class="mb-1 text-end">
                 <a href="#" class="small text-decoration-none">Forgot password?</a>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100">Log in →</button>
-        </form>
+            <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" id="guardrails">
+                <label class="form-check-label" for="guardrails" style="font-size:0.93rem;">
+                Enable Guardrails
+                </label>
+            </div>
+
+            <div class="form-check mt-1">
+                <input class="form-check-input" type="checkbox" id="roll-level-security">
+                <label class="form-check-label" for="roll-level-security" style="font-size:0.93rem;">
+                Enable Roll Level Security
+                </label>
+            </div>
+
+        </div>
     </div>
 </div>
 

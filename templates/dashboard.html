@@ -8,46 +8,77 @@
 </head>
 <body class="bg-light">
 
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
-  <div class="container-fluid px-4">
-    <!-- Logo -->
-    <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard') }}">
-        <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="Logo" style="height:40px;" class="me-2">
-        <span class="fw-bold">Project AI Assistant</span>
-    </a>
+<!-- Navbar (Logo left, back arrow, no text) -->
+<nav class="navbar navbar-light bg-white shadow-sm sticky-top" style="height: 80px;">
+    <div class="container-fluid d-flex align-items-center" style="height: 68px;">
+        
+        <!-- Logo+Arrow Grouped Left -->
+        <div class="d-flex align-items-center" style="height: 60px;">
+            <a href="{{ url_for('login') }}">
+                <img src="{{ url_for('static', filename='llm.png') }}" alt="Logo" style="height:50px; width:auto; margin-left: 12px; margin-top: 0px;">
+            </a>
+            <a href="javascript:history.back()" 
+               style="margin-left: 14px; color: #00009f; font-size: 2.2rem; text-decoration:none; display: flex; align-items: center;" 
+               title="Back">
+                &#8592;
+            </a>
+        </div>
 
-    <!-- Logout button -->
-    <div class="d-flex">
-        <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
+        <!-- Logout button -->
+         <div class="d-flex">
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
+        </div>
     </div>
-  </div>
-</nav>
+  </nav>
 
 <!-- Page Content -->
 <div class="container py-5">
-    <h2 class="text-center fw-bold">Enterprise Orchestration Suite</h2>
-    <p class="text-center text-muted mb-5">
-        QA, Workflows, Transactions, Insights, and Data Management
-    </p>
+    <h2 class="text-center" style="font-size:2.2rem; font-weight:650; margin-top: 20px; margin-bottom:30px; letter-spacing: -1px;">
+        Pretrained, Domain-Tuned AI Agents for the Public Sector
+    </h2>
+    <div style="height: 2px; width: 90vw; background: #dadddf; margin: 30px 0 5px 0; position: relative; left: 50%; right: 50%; transform: translateX(-50%); border: none; margin-bottom: 40px"></div>
 
-    <!-- Grid of Department Tiles -->
-    <div class="row row-cols-1 row-cols-md-3 g-4">
+    <!-- Outer grey box around all tiles -->
+    <div style="
+        border-radius: 22px;
+        border: 2.5px solid #ccd0d2;
+        background: #fff;
+        padding: 20px 50px;
+        margin: 0 auto;
+        width: 900px;
+        display: block;"
+    "
+    class="d-block mx-auto">
+    <div class="row row-cols-1 row-cols-md-3 g-0" style="margin:0;">
         {% for dept in departments %}
-        <div class="col">
-            <a href="{{ url_for(dept.route) }}" class="text-decoration-none">
-                <div class="card shadow-sm h-100 text-center p-4 hover-card">
-                    <div class="d-flex flex-column align-items-center justify-content-center h-100">
-                        <img src="{{ url_for('static', filename='icons/' + dept.icon) }}" 
-                             alt="{{ dept.name }}" 
-                             class="dept-icon mb-3">
-                        <h6 class="fw-semibold text-dark">{{ dept.name }}</h6>
+            <div class="col d-flex justify-content-center" style="padding: 8px 2px;">
+                <a href="{{ url_for('modules', dept=dept.key) }}" style="text-decoration:none;">
+                    <div class="card dashboard-tile d-flex align-items-center justify-content-center"
+                        style="width: 210px; height: 150px; border: 2px solid #B0B1B5; border-radius:20px; box-shadow: none; margin: 0;">
+                        {% if dept.icon == 'edd.jpeg' or dept.icon == 'ranchocordova.jpeg' %}
+                            <img src="{{ url_for('static', filename='icons/' + dept.icon) }}"
+                                alt="{{ dept.name }}"
+                                style="max-width: 190px; max-height: 150px; object-fit: contain;">
+                        {% elif dept.icon in ['ftb.jpeg','dmv.jpeg', 'cdfa.jpeg'] %}
+                            <img src="{{ url_for('static', filename='icons/' + dept.icon) }}"
+                                alt="{{ dept.name }}"
+                                style="max-width: 190px; max-height: 130px; object-fit: contain;">
+                        {% elif dept.icon == 'ftb.jpeg' %}
+                            <img src="{{ url_for('static', filename='icons/' + dept.icon) }}"
+                                alt="{{ dept.name }}"
+                                style="max-width: 200px; max-height: 170px; object-fit: contain;">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='icons/' + dept.icon) }}"
+                                alt="{{ dept.name }}"
+                                style="max-width: 150px; max-height: 110px; object-fit:contain;">
+                        {% endif %}
                     </div>
-                </div>
-            </a>
-        </div>
+                </a>
+            </div>
         {% endfor %}
     </div>
+</div>
+
 </div>
 
 </body>
