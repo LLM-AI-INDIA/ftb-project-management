@@ -3,12 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <title>FTB - Enterprise Q&A</title>
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <style>
     body {
-      background-color: #f8f9fa;
-      font-family: Arial, sans-serif;
-      height: 100vh;
+      background-color: #f5f7fa;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
@@ -17,142 +19,305 @@
       display: flex;
       flex-direction: column;
       width: 95%;
-      max-width: 1400px; /* Much wider maximum */
+      max-width: 1400px; /* Wider for functionality */
       margin: 0 auto;
-      padding: 0 15px;
+      padding: 20px 15px;
     }
     .chat-container {
       flex: 1;
-      background: white;
-      border-radius: 12px;
-      border: 3px solid #2e7d32;
-      box-shadow: 0 0 20px rgba(0,0,0,0.15);
+      background-color: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      backdrop-filter: blur(10px);
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      height: 80vh;
-      width: 100%; /* Full width of parent */
+      min-height: 75vh;
+      border: 1px solid #e9ecef;
     }
     .chat-header {
-      background-color: #2e7d32;
+      background-color: #667eea;
       color: white;
-      padding: 20px;
+      padding: 25px;
       text-align: center;
+      position: relative;
+    }
+    .chat-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+    }
+    .chat-header h4 {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      font-weight: 300;
+      font-size: 1.5rem;
     }
     .chat-window {
       flex: 1;
       overflow-y: auto;
-      padding: 25px;
-      background-color: #f0f2f5;
-      width: 100%; /* Full width */
+      padding: 30px;
+      background: #ffffff;
+      position: relative;
     }
     .message {
-      margin-bottom: 20px;
+      margin-bottom: 25px;
       display: flex;
-      flex-direction: column;
-      width: 100%; /* Full width */
+      align-items: flex-start;
+      animation: fadeInUp 0.3s ease-out;
     }
     .user-message {
-      align-items: flex-end;
+      flex-direction: row-reverse;
     }
     .bot-message {
-      align-items: flex-start;
+      flex-direction: row;
     }
-    .message-content {
-      max-width: 85%; /* Even wider message bubbles */
-      padding: 15px 20px;
-      border-radius: 20px;
-      margin: 8px 0;
-      word-wrap: break-word;
-      font-size: 16px;
+    .message-avatar {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin: 0 15px;
+      flex-shrink: 0;
     }
-    .user-message .message-content {
-      background-color: #2e7d32;
+    .user-avatar {
+      background-color: #ff9a9e;
       color: white;
     }
+    .bot-avatar {
+      background-color: #a8edea;
+      color: #555;
+    }
+    .message-content {
+      max-width: 85%; /* Wider for better functionality */
+      padding: 18px 22px;
+      border-radius: 20px;
+      word-wrap: break-word;
+      font-size: 15px;
+      line-height: 1.5;
+      position: relative;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+    }
+    .user-message .message-content {
+      background-color: #667eea;
+      color: white;
+      border-bottom-right-radius: 5px;
+    }
     .bot-message .message-content {
-      background-color: #e9ecef;
+      background-color: #f8f9fa;
       color: #333;
-      border: 1px solid #ddd;
+      border: 1px solid #e9ecef;
+      border-bottom-left-radius: 5px;
     }
     .chat-input {
-      padding: 25px;
-      border-top: 2px solid #ddd;
+      padding: 30px;
+      background-color: #ffffff;
+      backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(0,0,0,0.1);
+    }
+    .input-container {
       background: white;
-      width: 100%; /* Full width */
+      border-radius: 25px;
+      padding: 8px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      border: 1px solid #e9ecef;
+      display: flex;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+    .input-container:focus-within {
+      box-shadow: 0 5px 25px rgba(102, 126, 234, 0.3);
+      border-color: #667eea;
     }
     .navbar-brand img {
-      height: 70px;
+      height: 50px;
     }
     .page-title {
       text-align: center;
-      margin: 20px 0;
-      color: #000000;
-      font-weight: bold;
-      font-size: 28px;
-    }
-    .btn-primary {
-      background-color: #2e7d32;
-      border-color: #2e7d32;
-      padding: 10px 20px;
-      white-space: nowrap; /* Prevent button text wrapping */
-    }
-    .btn-primary:hover {
-      background-color: #1b5e20;
-      border-color: #1b5e20;
+      margin: 25px 0;
+      color: #333;
+      font-weight: 600;
+      font-size: 2rem;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     #prompt {
-      width: 100%; /* Full width input */
-      margin-right: 15px;
+      border: none;
+      outline: none;
+      flex: 1;
+      padding: 12px 20px;
+      font-size: 16px;
+      background: transparent;
     }
-    .input-group {
-      width: 100%; /* Full width input group */
+    .send-btn {
+      background-color: #667eea;
+      border: none;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
     }
-    /* Ensure navbar is also wide */
+    .send-btn:hover {
+      background-color: #5a6fd8;
+      transform: translateY(-1px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    .navbar {
+      background-color: #ffffff !important;
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
     .navbar .container-fluid {
-      max-width: 1400px;
+      max-width: 1400px; /* Matching the main container width */
       margin: 0 auto;
+    }
+    .btn-outline-danger {
+      border-radius: 20px;
+      transition: all 0.3s ease;
+    }
+    .btn-outline-danger:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+    }
+    .welcome-message {
+      background-color: #a8edea;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      text-align: center;
+      color: #555;
+      font-weight: 500;
+    }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .typing-indicator {
+      display: none;
+      padding: 15px 22px;
+      background-color: #f8f9fa;
+      border-radius: 20px;
+      border-bottom-left-radius: 5px;
+      margin-left: 60px;
+      width: fit-content;
+      border: 1px solid #e9ecef;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+    }
+    .typing-dots {
+      display: flex;
+      gap: 4px;
+    }
+    .typing-dots span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #999;
+      animation: typing 1.4s infinite;
+    }
+    .typing-dots span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    .typing-dots span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+    @keyframes typing {
+      0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.5;
+      }
+      30% {
+        transform: translateY(-10px);
+        opacity: 1;
+      }
     }
   </style>
 </head>
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+<nav class="navbar navbar-expand-lg navbar-light">
   <div class="container-fluid px-4">
     <!-- Logo -->
     <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard') }}">
-        <img src="{{ url_for('static', filename='llm.png') }}" alt="Logo" class="me-2">
+        <img src="{{ url_for('static', filename='llm.png') }}" alt="Logo" class="me-2" style="height: 50px;">
     </a>
 
     <!-- Logout button -->
     <div class="d-flex">
-        <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
+        <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">
+          <i class="fas fa-sign-out-alt me-1"></i>Logout
+        </a>
     </div>
   </div>
 </nav>
 
 <div class="main-container">
-  <h3 class="page-title">Franchise Tax Board: Enterprise Q&A</h3>
-  
+  <h2 class="page-title">Franchise Tax Board: Enterprise Q&A</h2>
+  <hr style="border: none; border-top: 2px solid #667eea; margin: 20px 0;">
+
   <div class="chat-container">
     <div class="chat-header">
       <h4 class="mb-0">LIM at scale.AI</h4>
     </div>
-    
+
     <div class="chat-window" id="chat-window">
-      <!-- Initial bot message only -->
+      <!-- Welcome message -->
+      <div class="welcome-message">
+        <i class="fas fa-robot me-2"></i>
+        We are delighted to have you here in the LIM at scale.AI Chat room!
+      </div>
+
+      <!-- Initial bot message -->
       <div class="message bot-message">
+        <div class="message-avatar bot-avatar">
+          <i class="fas fa-robot"></i>
+        </div>
         <div class="message-content">
           Greetings! How can I help you today?
         </div>
       </div>
+
+      <!-- Typing indicator -->
+      <div class="typing-indicator" id="typing-indicator">
+        <div class="typing-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
     </div>
-    
+
     <div class="chat-input">
-      <form id="chat-form" class="d-flex align-items-center">
-        <input type="text" id="prompt" class="form-control me-3" placeholder="How can I help you?">
-        <button type="submit" class="btn btn-primary">Interact with LLM</button>
+      <div class="mb-2">
+        <label for="prompt" class="form-label text-muted">Prompt:</label>
+      </div>
+      <form id="chat-form">
+        <div class="input-container">
+          <input type="text" id="prompt" placeholder="How can I help you?">
+          <button type="submit" class="send-btn">
+            <i class="fas fa-paper-plane"></i>
+            Interact with LLM
+          </button>
+        </div>
       </form>
     </div>
   </div>
@@ -162,6 +327,7 @@
   const form = document.getElementById('chat-form');
   const promptInput = document.getElementById('prompt');
   const chatWindow = document.getElementById('chat-window');
+  const typingIndicator = document.getElementById('typing-indicator');
 
   // Set focus to input field on page load
   window.addEventListener('load', () => {
@@ -171,18 +337,26 @@
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const userMessage = promptInput.value.trim();
-    
+
     if (!userMessage) return;
 
     // Display user message
     const userDiv = document.createElement('div');
     userDiv.className = 'message user-message';
-    userDiv.innerHTML = `<div class="message-content">${userMessage}</div>`;
+    userDiv.innerHTML = `
+      <div class="message-avatar user-avatar">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="message-content">${userMessage}</div>
+    `;
     chatWindow.appendChild(userDiv);
 
     // Clear input
     promptInput.value = '';
-    
+
+    // Show typing indicator
+    typingIndicator.style.display = 'block';
+
     // Scroll to bottom
     chatWindow.scrollTop = chatWindow.scrollHeight;
 
@@ -200,29 +374,45 @@
 
       const data = await response.json();
 
+      // Hide typing indicator
+      typingIndicator.style.display = 'none';
+
       // Display bot response - make sure we extract the text properly
       let answerText = data.answer;
       if (typeof answerText !== 'string') {
         // If it's an object, try to stringify it
         answerText = JSON.stringify(answerText);
       }
-      
+
       const botDiv = document.createElement('div');
       botDiv.className = 'message bot-message';
-      botDiv.innerHTML = `<div class="message-content">${answerText}</div>`;
+      botDiv.innerHTML = `
+        <div class="message-avatar bot-avatar">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">${answerText}</div>
+      `;
       chatWindow.appendChild(botDiv);
 
       // Scroll to bottom again
       chatWindow.scrollTop = chatWindow.scrollHeight;
     } catch (error) {
       console.error('Error:', error);
-      
+
+      // Hide typing indicator
+      typingIndicator.style.display = 'none';
+
       // Display error message
       const errorDiv = document.createElement('div');
       errorDiv.className = 'message bot-message';
-      errorDiv.innerHTML = `<div class="message-content">Sorry, I encountered an error. Please try again.</div>`;
+      errorDiv.innerHTML = `
+        <div class="message-avatar bot-avatar">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="message-content">Sorry, I encountered an error. Please try again.</div>
+      `;
       chatWindow.appendChild(errorDiv);
-      
+
       // Scroll to bottom
       chatWindow.scrollTop = chatWindow.scrollHeight;
     }
