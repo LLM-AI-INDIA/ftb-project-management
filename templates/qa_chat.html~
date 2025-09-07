@@ -249,25 +249,6 @@
         opacity: 1;
       }
     }
-      .message-content ul {
-    margin: 0.5rem 0;
-    padding-left: 1.5rem;
-  }
-  .message-content li {
-    margin: 0.25rem 0;
-    line-height: 1.4;
-  }
-  .message-content strong {
-    font-weight: 600;
-  }
-  .message-content em {
-    font-style: italic;
-  }
-  .message-content br {
-    margin-bottom: 0.5rem;
-    display: block;
-    content: "";
-  }
   </style>
 </head>
 <body>
@@ -346,52 +327,36 @@
   const form = document.getElementById('chat-form');
   const promptInput = document.getElementById('prompt');
   const chatWindow = document.getElementById('chat-window');
+  const typingIndicator = document.getElementById('typing-indicator');
 
   // Set focus to input field on page load
   window.addEventListener('load', () => {
     promptInput.focus();
   });
 
-  // Function to format the response text
-  function formatResponse(text) {
-    // Replace markdown-like syntax with HTML
-    let formattedText = text
-      // Convert line breaks
-      .replace(/\n/g, '<br>')
-      // Convert bullet points
-      .replace(/\*\s*(.+?)(?=\n|$)/g, '<li>$1</li>')
-      // Convert numbered lists
-      .replace(/(\d+)\.\s*(.+?)(?=\n|$)/g, '<li>$2</li>')
-      // Convert bold text
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      // Convert italic text
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      // Convert section headers
-      .replace(/#{1,6}\s*(.+?)(?=\n|$)/g, '<strong>$1</strong><br>');
-    
-    // Wrap lists in ul tags if we have list items
-    if (formattedText.includes('<li>')) {
-      formattedText = formattedText.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
-    }
-    
-    return formattedText;
-  }
-
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const userMessage = promptInput.value.trim();
-    
+
     if (!userMessage) return;
 
     // Display user message
     const userDiv = document.createElement('div');
     userDiv.className = 'message user-message';
-    userDiv.innerHTML = `<div class="message-content">${userMessage}</div>`;
+    userDiv.innerHTML = `
+      <div class="message-avatar user-avatar">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="message-content">${userMessage}</div>
+    `;
     chatWindow.appendChild(userDiv);
 
     // Clear input
     promptInput.value = '';
-    
+
+    // Show typing indicator
+    typingIndicator.style.display = 'block';
+
     // Scroll to bottom
     chatWindow.scrollTop = chatWindow.scrollHeight;
 
@@ -409,30 +374,45 @@
 
       const data = await response.json();
 
-      // Display bot response - properly formatted
+      // Hide typing indicator
+      typingIndicator.style.display = 'none';
+
+      // Display bot response - make sure we extract the text properly
       let answerText = data.answer;
       if (typeof answerText !== 'string') {
+        // If it's an object, try to stringify it
         answerText = JSON.stringify(answerText);
       }
-      
-      const formattedAnswer = formatResponse(answerText);
-      
+
       const botDiv = document.createElement('div');
       botDiv.className = 'message bot-message';
-      botDiv.innerHTML = `<div class="message-content">${formattedAnswer}</div>`;
+      botDiv.innerHTML = `
+        <div class="message-avatar bot-avatar">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">${answerText}</div>
+      `;
       chatWindow.appendChild(botDiv);
 
       // Scroll to bottom again
       chatWindow.scrollTop = chatWindow.scrollHeight;
     } catch (error) {
       console.error('Error:', error);
-      
+
+      // Hide typing indicator
+      typingIndicator.style.display = 'none';
+
       // Display error message
       const errorDiv = document.createElement('div');
       errorDiv.className = 'message bot-message';
-      errorDiv.innerHTML = `<div class="message-content">Sorry, I encountered an error. Please try again.</div>`;
+      errorDiv.innerHTML = `
+        <div class="message-avatar bot-avatar">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="message-content">Sorry, I encountered an error. Please try again.</div>
+      `;
       chatWindow.appendChild(errorDiv);
-      
+
       // Scroll to bottom
       chatWindow.scrollTop = chatWindow.scrollHeight;
     }

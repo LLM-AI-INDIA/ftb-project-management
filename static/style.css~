@@ -1,0 +1,34 @@
+/* Navbar styling */
+.navbar-brand {
+    font-size: 1.1rem;
+    color: #111827;
+}
+
+.navbar-brand:hover {
+    color: #1d4ed8;
+    text-decoration: none;
+}
+
+.btn-outline-danger {
+    border-radius: 20px;
+    padding: 4px 14px;
+}
+
+/* Dashboard cards */
+.hover-card {
+    border-radius: 12px;
+    transition: all 0.3s ease-in-out;
+    background-color: #fff;
+}
+
+.hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* Department icons */
+.dept-icon {
+    height: 60px;
+    width: auto;
+    object-fit: contain;
+}

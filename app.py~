@@ -99,10 +99,6 @@ def qa_page():
     return render_template("qa_chat.html")
 
 
-# For the FTB Enterprise Q&A
-# Global QA chain
-qa = None
-
 # 2️⃣ API endpoint for queries
 @app.route("/qa_api", methods=["POST"])
 @login_required
@@ -125,12 +121,17 @@ def qa_endpoint():
         # Call the query function
         result = qa(query)
         
+        # Ensure we return a string
+        if hasattr(result, 'content'):
+            result = result.content
+        elif not isinstance(result, str):
+            result = str(result)
+            
         return jsonify({"answer": result})
         
     except Exception as e:
         print(f"Error in QA endpoint: {e}")
         return jsonify({"answer": "I apologize, but I encountered a system error. Please try again later."})
-    
 
 @app.route("/modules/<dept>")
 @login_required
@@ -157,28 +158,10 @@ def modules(dept):
         "cdfa": "CDFA",
         "energy": "Office of Energy Infrastructure",
     }
-    
-    # Define the modules with their routes
-    modules_list = [
-        {"name": "Enterprise QA", "icon": "qa.png", "route": "qa_page"},
-        {"name": "Workflow", "icon": "workflow.png", "route": "oops"},
-        {"name": "Transaction", "icon": "transaction.png", "route": "oops"},
-        {"name": "Insights", "icon": "insights.png", "route": "insights"},
-        {"name": "Data Management", "icon": "datamanagement.png", "route": "oops"},
-        {"name": "Voice Agent", "icon": "voiceagent.png", "route": "oops"}
-    ]
-    
     # Fallback icon and name if an unknown dept is supplied
     company_icon = icons.get(dept, "default.jpeg")
     company_name = display_names.get(dept, "Department")
-    
-    return render_template(
-        "modules.html", 
-        company_icon=company_icon, 
-        company_name=company_name,
-        modules=modules_list  # Add this line to pass the modules data
-    )
-
+    return render_template("modules.html", company_icon=company_icon, company_name=company_name)
 
 @app.route("/debug")
 def debug():
