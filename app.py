@@ -50,15 +50,15 @@ def login():
 @login_required
 def dashboard():
     departments = [
-        {"name": "FTB", "route": "ftb", "icon": "ftb.jpeg"},
-        {"name": "Dept of Motor Vehicles", "route": "oops", "icon": "dmv.jpeg"},
-        {"name": "City of San Jose", "route": "oops", "icon": "sanjose.jpeg"},
-        {"name": "Employment Development Dept", "route": "oops", "icon": "edd.jpeg"},
-        {"name": "Fi$cal", "route": "oops", "icon": "fiscal.jpeg"},
-        {"name": "Rancho Cordova", "route": "oops", "icon": "ranchocordova.jpeg"},
-        {"name": "CalPERS", "route": "oops", "icon": "calpers.jpeg"},
-        {"name": "CDFA", "route": "oops", "icon": "cdfa.jpeg"},
-        {"name": "Office of Energy Infrastructure", "route": "oops", "icon": "energy.jpeg"},
+        {"name": "FTB", "key": "ftb", "icon": "ftb.jpeg"},
+        {"name": "Dept of Motor Vehicles", "key": "dmv", "icon": "dmv.jpeg"},
+        {"name": "City of San Jose", "key": "sanjose", "icon": "sanjose.jpeg"},
+        {"name": "Employment Development Dept", "key": "edd", "icon": "edd.jpeg"},
+        {"name": "Fi$cal", "key": "fiscal", "icon": "fiscal.jpeg"},
+        {"name": "Rancho Cordova", "key": "ranchocordova", "icon": "ranchocordova.jpeg"},
+        {"name": "CalPERS", "key": "calpers", "icon": "calpers.jpeg"},
+        {"name": "CDFA", "key": "cdfa", "icon": "cdfa.jpeg"},
+        {"name": "Office of Energy Infrastructure", "key": "energy", "icon": "energy.jpeg"},
     ]
     return render_template("dashboard.html", departments=departments)
 
@@ -133,6 +133,35 @@ def qa_endpoint():
         print(f"Error in QA endpoint: {e}")
         return jsonify({"answer": "I apologize, but I encountered a system error. Please try again later."})
 
+@app.route("/modules/<dept>")
+@login_required
+def modules(dept):
+    icons = {
+        "ftb": "ftb.jpeg",
+        "dmv": "dmv.jpeg",
+        "sanjose": "sanjose.jpeg",
+        "edd": "edd.jpeg",
+        "fiscal": "fiscal.jpeg",
+        "ranchocordova": "ranchocordova.jpeg",
+        "calpers": "calpers.jpeg",
+        "cdfa": "cdfa.jpeg",
+        "energy": "energy.jpeg",
+    }
+    display_names = {
+        "ftb": "Franchise Tax Board (FTB)",
+        "dmv": "Dept of Motor Vehicles",
+        "sanjose": "City of San Jose",
+        "edd": "Employment Development Dept",
+        "fiscal": "Fi$cal",
+        "ranchocordova": "Rancho Cordova",
+        "calpers": "CalPERS",
+        "cdfa": "CDFA",
+        "energy": "Office of Energy Infrastructure",
+    }
+    # Fallback icon and name if an unknown dept is supplied
+    company_icon = icons.get(dept, "default.jpeg")
+    company_name = display_names.get(dept, "Department")
+    return render_template("modules.html", company_icon=company_icon, company_name=company_name)
 
 @app.route("/debug")
 def debug():
@@ -148,3 +177,4 @@ def debug():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
