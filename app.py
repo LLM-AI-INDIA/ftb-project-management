@@ -99,10 +99,6 @@ def qa_page():
     return render_template("qa_chat.html")
 
 
-# For the FTB Enterprise Q&A
-# Global QA chain
-qa = None
-
 # 2️⃣ API endpoint for queries
 @app.route("/qa_api", methods=["POST"])
 @login_required
