@@ -4,69 +4,7 @@
     <meta charset="UTF-8">
     <title>FTB - Enterprise Orchestration Suite</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: Arial, sans-serif;
-        }
-        .navbar-brand img {
-            height: 40px;
-        }
-        .main-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #000000; /* Changed to black */
-            text-align: center;
-            margin-bottom: 0.5rem;
-        }
-        .subtitle {
-            font-size: 1.2rem;
-            color: #6c757d;
-            text-align: center;
-            margin-bottom: 3rem;
-        }<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>FTB - Enterprise Orchestration Suite</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: Arial, sans-serif;
-        }
-        .navbar-brand img {
-            height: 40px;
-        }
-        .main-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #000000; /* Changed to black */
-            text-align: center;
-            margin-bottom: 0.5rem;
-        }
-        .subtitle {
-
-        .module-card {
-            transition: transform 0.2s, box-shadow 0.2s;
-            height: 100%;
-            border: none;
-            border-radius: 12px;
-        }
-        .module-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
-        }
-        .module-icon {
-            height: 80px;
-            margin-bottom: 1rem;
-        }
-        .module-name {
-            font-weight: 600;
-            color: #000000; /* Changed to black */
-            font-size: 1.1rem;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="bg-light">
 
@@ -74,7 +12,9 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
   <div class="container-fluid px-4">
     <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard') }}">
-        <img src="{{ url_for('static', filename='llm.png') }}" alt="Logo" class="me-2">
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='llm.png') }}" alt="Logo" class="logo">
+        </div>
         <span class="fw-bold">Enterprise Orchestration Suite</span>
     </a>
     <div class="d-flex">
@@ -86,9 +26,8 @@
 <!-- Page Content -->
 <div class="container py-5">
     <!-- Main Title and Subtitle -->
-    <div class="text-center mb-5">
-        <h1 class="main-title">Enterprise Orchestration Suite</h1>
-        <p class="subtitle">QA, Workflows, Transactions, Insights, and Data Management</p>
+    <div class="text-center mb-5 header-content">
+        <h1 class="main-title dark-blue-text">Enterprise Orchestration Suite: QA, Workflows, Transactions, Insights, and Data Management</h1>
     </div>
 
     <!-- Module Grid - 3x2 layout (3 columns, 2 rows) -->
@@ -99,7 +38,7 @@
             {"name": "Transaction", "icon": "transaction.png", "route": "oops"},
             {"name": "Insights", "icon": "insights.png", "route": "insights"},
             {"name": "Data Management", "icon": "datamanagement.png", "route": "oops"},
-            {"name": "Voice Agent", "icon": "voiceagent.png", "route": "oops"}
+            {": "Voice Agent", "icon": "voiceagent.png", "route": "oops"}
         ] %}
         
         {% for module in modules %}
