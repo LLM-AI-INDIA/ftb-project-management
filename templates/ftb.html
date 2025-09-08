@@ -9,29 +9,36 @@
 <body class="bg-light">
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
-  <div class="container-fluid px-4">
-    <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard') }}">
-        <div class="logo-container">
-            <img src="{{ url_for('static', filename='llm.png') }}" alt="Logo" class="logo">
+<nav class="navbar navbar-light bg-white shadow-sm sticky-top" style="height: 85px;">
+    <div class="container-fluid d-flex align-items-center" style="height: 75px;">
+        
+        <!-- Logo with white background -->
+        <div class="d-flex align-items-center logo-container">
+            <a href="{{ url_for('login') }}">
+                <img src="{{ url_for('static', filename='llm.png') }}" alt="Logo" style="height:55px; width:auto;">
+            </a>
+            <!-- Left Arrow -->
+            <a href="javascript:history.back()" class="back-arrow" title="Back">
+              &laquo;
+            </a>
         </div>
-        <span class="fw-bold">Enterprise Orchestration Suite</span>
-    </a>
-    <div class="d-flex">
-        <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
+
+        <!-- Logout button -->
+        <div class="d-flex">
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
+        </div>
     </div>
-  </div>
 </nav>
 
 <!-- Page Content -->
 <div class="container py-5">
-    <!-- Main Title and Subtitle -->
-    <div class="text-center mb-5 header-content">
-        <h1 class="main-title dark-blue-text">Enterprise Orchestration Suite: QA, Workflows, Transactions, Insights, and Data Management</h1>
-    </div>
+  <!-- Main Title and Subtitle -->
+  <h2 class="text-center dark-blue-text" style="font-size:2.3rem; font-weight:700; margin-top: 25px; margin-bottom:35px; letter-spacing: -0.5px;">
+        Enterprise Orchestration Suite: QA, Workflows, Transactions, Insights and Data
+    </h2>
 
     <!-- Module Grid - 3x2 layout (3 columns, 2 rows) -->
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4"> <!-- Corrected to 3 columns -->
+    <div class="row row-cols-3 row-cols-sm-3 row-cols-md-2 g-4"> <!-- Corrected to 3 columns -->
         {% set modules = [
             {"name": "Enterprise QA", "icon": "qa.png", "route": "qa_page"},
             {"name": "Workflow", "icon": "workflow.png", "route": "oops"},

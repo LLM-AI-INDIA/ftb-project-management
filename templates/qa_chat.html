@@ -84,7 +84,7 @@
       border-radius: 50%;
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: right;
       font-size: 20px;
       margin: 0 15px;
       flex-shrink: 0;
@@ -273,21 +273,27 @@
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-light">
-  <div class="container-fluid px-4">
-    <!-- Logo -->
-    <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard') }}">
-        <img src="{{ url_for('static', filename='llm.png') }}" alt="Logo" class="me-2" style="height: 50px;">
-    </a>
+<nav class="navbar navbar-light bg-white shadow-sm sticky-top" style="height: 85px;">
+    <div class="container-fluid d-flex align-items-center" style="height: 75px;">
+        
+        <!-- Logo with white background -->
+        <div class="d-flex align-items-center logo-container">
+            <a href="{{ url_for('login') }}">
+                <img src="{{ url_for('static', filename='llm.png') }}" alt="Logo" style="height:55px; width:auto;">
+            </a>
+            <!-- Left Arrow -->
+            <a href="javascript:history.back()" class="back-arrow" title="Back">
+              &laquo;
+            </a>
+        </div>
 
-    <!-- Logout button -->
-    <div class="d-flex">
-        <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">
-          <i class="fas fa-sign-out-alt me-1"></i>Logout
-        </a>
+        <!-- Logout button -->
+        <div class="d-flex">
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
+        </div>
     </div>
-  </div>
 </nav>
+
 
 <div class="main-container">
   <h2 class="page-title">Franchise Tax Board: Enterprise Q&A</h2>
@@ -295,7 +301,7 @@
 
   <div class="chat-container">
     <div class="chat-header">
-      <h4 class="mb-0">LIM at scale.AI</h4>
+      <h4 class="mb-0">Conversational Intelligence</h4>
     </div>
 
     <div class="chat-window" id="chat-window">
@@ -334,7 +340,7 @@
           <input type="text" id="prompt" placeholder="How can I help you?">
           <button type="submit" class="send-btn">
             <i class="fas fa-paper-plane"></i>
-            Interact with LLM
+            Ask the Agent
           </button>
         </div>
       </form>

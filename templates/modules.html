@@ -9,24 +9,27 @@
 <body class="bg-light">
 
 <!-- Navbar -->
-<nav class="navbar navbar-light bg-white shadow-sm sticky-top" style="height: 80px;">
-    <div class="container-fluid d-flex align-items-center" style="height: 68px;">
-        <!-- Logo + Back Arrow grouped left -->
-        <div class="d-flex align-items-center" style="height: 60px;">
-            <a href="{{ url_for('dashboard') }}">
-                <img src="{{ url_for('static', filename='llm.png') }}" alt="Logo" style="height:50px; width:auto; margin-left: 12px; margin-top: 0px;">
+<nav class="navbar navbar-light bg-white shadow-sm sticky-top" style="height: 85px;">
+    <div class="container-fluid d-flex align-items-center" style="height: 75px;">
+        
+        <!-- Logo with white background -->
+        <div class="d-flex align-items-center logo-container">
+            <a href="{{ url_for('login') }}">
+                <img src="{{ url_for('static', filename='llm.png') }}" alt="Logo" style="height:55px; width:auto;">
             </a>
-            <a href="javascript:history.back()"
-               style="margin-left: 14px; color: #00009f; font-size: 2.2rem; text-decoration:none; display: flex; align-items: center;"
-               title="Back">
-                &#8592;
+            <!-- Left Arrow -->
+            <a href="javascript:history.back()" class="back-arrow" title="Back">
+              &laquo;
             </a>
         </div>
+
+        <!-- Logout button -->
         <div class="d-flex">
             <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
         </div>
     </div>
 </nav>
+
 
 <!-- Page Content -->
 <div class="container py-5">
@@ -38,23 +41,22 @@
              style="height:100px; display:block; margin:0 auto 30px auto;">
     {% endif %}
 
-    <h2 class="fw-bold text-center"
-        style="font-size:1.9rem; margin: 10px 0 18px 0; letter-spacing:-.3px;">
-        Enterprise Orchestration Suite: QA, Workflows, Transactions, Insights, and Data Management
+  <h2 class="text-center dark-blue-text" style="font-size:2.3rem; font-weight:700; margin-top: 25px; margin-bottom:35px; letter-spacing: -0.5px;">
+        Enterprise Orchestration Suite: QA, Workflows, Transactions, Insights and Data
     </h2>
-    <div style="height: 2px; width: 90vw; background: #dadddf; margin: 30px 0 5px 0; position: relative; left: 50%; right: 50%; transform: translateX(-50%); border: none; margin-bottom: 40px"></div>
+    <div style="height: 2px; width: 90vw; background: #e8e7e6; margin: 30px 0 5px 0; position: relative; left: 50%; right: 50%; transform: translateX(-50%); border: none; margin-bottom: 40px"></div>
 
     <!-- Outer border around the module grid -->
     <div style="
         border-radius: 22px;
-        border: 2.5px solid #ccd0d2;
+        border: 1.5px solid #ccd0d2;
         background: #fff;
         padding: 20px 50px;
         margin: 0 auto;
         width: 900px;
         display: block;">
         <!-- Module Grid -->
-        <div class="row row-cols-1 row-cols-md-3 g-0" style="margin:0;">
+        <div class="row row-cols-3 row-cols-md-2 g-0" style="margin:0;">
             {% set modules = [
                 {"name": "Enterprise QA", "icon": "qa.png", "route": "qa_page"},
                 {"name": "Workflow", "icon": "workflow.png", "route": "oops"},
