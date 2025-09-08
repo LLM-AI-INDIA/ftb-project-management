@@ -24,7 +24,7 @@
 
 .hover-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Reduced shadow effect */
+    box-shadow: 20 24px 28px rgba(0, 0, 0, 0.1); /* Reduced shadow effect */
 }
 
 /* Department icons */
@@ -65,13 +65,13 @@
 }
 
 .dashboard-tile:hover {
-    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    box-shadow: 20px 20px 60px rgba(0,0,0,0.06);
     border-color: #c0e6d0 !important; /* Lighter green on hover */
 }
 
 /* Text colors as shown in PPT */
 .dark-blue-text {
-    color: #00008B !important; /* Dark blue color */
+    color: #2504c9 !important; /* Dark blue color */
 }
 
 .gray-text {
@@ -80,7 +80,7 @@
 
 /* Arrow styling */
 .back-arrow {
-    color: #2d3748 !important; /* Darker arrow color */
+    color: #34C28F !important; /* Darker arrow color */
     font-size: 1.8rem !important; /* Slightly smaller arrow */
     margin-left: 10px !important; /* Reduced space */
     text-decoration: none;
@@ -106,7 +106,7 @@
 
 .module-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0,0.08) !important;
+    box-shadow: 20px 20px 50px rgba(0,0,0,0,0.08) !important;
 }
 
 .module-icon {
@@ -118,7 +118,7 @@
 
 .module-name {
     font-weight: 600;
-    color: #00008B !important; /* Dark blue color */
+    color: #2504c9 !important; /* Dark blue color */
     font-size: 1rem;
 }
 
@@ -136,7 +136,7 @@
 
 /* Make all cards lighter by default */
 .card {
-    border: 3px solid #e2e6ea !important;
+    border: 1.5px solid #e2e6ea !important;
 }
 
 /* Lighten horizontal lines globally */
@@ -144,4 +144,8 @@ hr, .light-hr {
     background: #e9ecef !important;
     height: 1px;
     border: none;
+}
+
+a {
+    color: green;
 }

@@ -38,25 +38,25 @@
     {% if company_icon %}
         <img src="{{ url_for('static', filename='icons/' + company_icon) }}"
              alt="Department"
-             style="height:100px; display:block; margin:0 auto 30px auto;">
+             style="height:150px; display:block; margin:0 auto 30px auto;">
     {% endif %}
 
   <h2 class="text-center dark-blue-text" style="font-size:2.3rem; font-weight:700; margin-top: 25px; margin-bottom:35px; letter-spacing: -0.5px;">
-        Enterprise Orchestration Suite: QA, Workflows, Transactions, Insights and Data
+        Enterprise Orchestration Suite
     </h2>
-    <div style="height: 2px; width: 90vw; background: #e8e7e6; margin: 30px 0 5px 0; position: relative; left: 50%; right: 50%; transform: translateX(-50%); border: none; margin-bottom: 40px"></div>
+    <div style="height: 4px; width: 90vw; background: #f8f8f8; margin: 30px 0 5px 0; position: relative; left: 50%; right: 50%; transform: translateX(-50%); border: none; margin-bottom: 40px"></div>
 
     <!-- Outer border around the module grid -->
     <div style="
         border-radius: 22px;
-        border: 1.5px solid #ccd0d2;
+        border: 1.5px solid #e2e6ea;
         background: #fff;
-        padding: 20px 50px;
+        padding: 50px 60px;
         margin: 0 auto;
         width: 900px;
         display: block;">
         <!-- Module Grid -->
-        <div class="row row-cols-3 row-cols-md-2 g-0" style="margin:0;">
+        <div class="row row-cols-1 row-cols-md-3 g-0" style="margin:0;">
             {% set modules = [
                 {"name": "Enterprise QA", "icon": "qa.png", "route": "qa_page"},
                 {"name": "Workflow", "icon": "workflow.png", "route": "oops"},
@@ -66,7 +66,7 @@
                 {"name": "Voice Agent", "icon": "voiceagent.png", "route": "oops"}
             ] %}
             {% for module in modules %}
-            <div class="col d-flex justify-content-center" style="padding: 8px 2px;">
+            <div class="col d-flex justify-content-center" style="padding: 15px 15px;">
                 <!-- FIXED: Use module.route instead of hardcoded 'insights' -->
                 <a href="{{ url_for(module.route) }}" class="text-decoration-none">
                     <div class="card dashboard-tile d-flex align-items-center justify-content-center"
