@@ -81,7 +81,7 @@
 /* Arrow styling */
 .back-arrow {
     color: #34C28F !important; /* Darker arrow color */
-    font-size: 1.8rem !important; /* Slightly smaller arrow */
+    font-size: 37px !important; /* Slightly smaller arrow */
     margin-left: 10px !important; /* Reduced space */
     text-decoration: none;
     display: flex;
