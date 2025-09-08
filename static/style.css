@@ -112,6 +112,7 @@
 .module-icon {
     height: 75px !important; /* Slightly larger icons */
     margin-bottom: 0.5rem;
+    border-width: 3px;
 }
 
 .module-name {
