@@ -6,6 +6,7 @@
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet"  href="{{ url_for('static', filename='style.css') }}">
   <style>
     body {
       background-color: #f5f7fa;
@@ -35,65 +36,74 @@
       min-height: 75vh;
       border: 1px solid #e9ecef;
     }
-    .chat-header {
-      background-color: #667eea;
-      color: white;
-      padding: 25px;
-      text-align: center;
-      position: relative;
-    }
-    .chat-header::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(255,255,255,0.1);
-      backdrop-filter: blur(10px);
-    }
-    .chat-header h4 {
-      position: relative;
-      z-index: 1;
-      margin: 0;
-      font-weight: 300;
-      font-size: 1.5rem;
-    }
-    .chat-window {
-      flex: 1;
-      overflow-y: auto;
-      padding: 30px;
-      background: #ffffff;
-      position: relative;
-    }
-    .message {
-      margin-bottom: 25px;
-      display: flex;
-      align-items: flex-start;
-      animation: fadeInUp 0.3s ease-out;
-    }
+
+.chat-header {
+    background-color: #667eea;
+    color: white;
+    padding: 25px;
+    text-align: center;
+    position: relative;
+}
+
+.chat-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+}
+
+.chat-header h4 {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    font-weight: 300;
+    font-size: 1.5rem;
+}
+    
+.chat-window {
+    flex: 1;
+    overflow-y: auto;
+    padding: 30px;
+    background: #ffffff;
+    position: relative;
+}
+
+.message {
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    animation: fadeInUp 0.3s ease-out;
+}
     .user-message {
       flex-direction: row-reverse;
     }
     .bot-message {
       flex-direction: row;
     }
-    .message-avatar {
-      width: 45px;
-      height: 45px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: right;
-      font-size: 20px;
-      margin: 0 15px;
-      flex-shrink: 0;
-    }
+
+
+.message-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin: 0 15px;
+    flex-shrink: 0;
+}
+    
     .user-avatar {
       background-color: #ff9a9e;
       color: white;
     }
     .bot-avatar {
+      justify-content: start;
       background-color: #a8edea;
       color: #555;
     }
@@ -104,6 +114,7 @@
       word-wrap: break-word;
       font-size: 15px;
       line-height: 1.5;
+      justify-content: left;
       position: relative;
       box-shadow: 0 2px 15px rgba(0,0,0,0.08);
     }
@@ -124,20 +135,23 @@
       backdrop-filter: blur(10px);
       border-top: 1px solid rgba(0,0,0,0.1);
     }
-    .input-container {
-      background: white;
-      border-radius: 25px;
-      padding: 8px;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-      border: 1px solid #e9ecef;
-      display: flex;
-      align-items: center;
-      transition: all 0.3s ease;
-    }
-    .input-container:focus-within {
-      box-shadow: 0 5px 25px rgba(102, 126, 234, 0.3);
-      border-color: #667eea;
-    }
+
+.input-container {
+    background: white;
+    border-radius: 25px;
+    padding: 8px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    border: 1px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.input-container:focus-within {
+    box-shadow: 0 5px 25px rgba(102, 126, 234, 0.3);
+    border-color: #667eea;
+}
+    
     .navbar-brand img {
       height: 50px;
     }
@@ -192,15 +206,21 @@
       transform: translateY(-1px);
       box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
     }
-    .welcome-message {
-      background-color: #a8edea;
-      padding: 20px;
-      border-radius: 15px;
-      margin-bottom: 20px;
-      text-align: center;
-      color: #555;
-      font-weight: 500;
-    }
+
+    
+.welcome-message {
+    background-color: #a8edea;
+    padding: 5px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #555;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: start;
+}
+    
     @keyframes fadeInUp {
       from {
         opacity: 0;
@@ -274,23 +294,22 @@
 
 <!-- Navbar -->
 <nav class="navbar navbar-light bg-white shadow-sm sticky-top" style="height: 85px;">
-    <div class="container-fluid d-flex align-items-center" style="height: 75px;">
-        
-        <!-- Logo with white background -->
-        <div class="d-flex align-items-center logo-container">
-            <a href="{{ url_for('login') }}">
+          <!-- Logo with white background and Left Arrow -->
+        <div class="d-flex align-items-stretch justify-content-start logo-container ms-auto">
+            <a href="{{ url_for('dashboard') }}">
                 <img src="{{ url_for('static', filename='llm.png') }}" alt="Logo" style="height:55px; width:auto;">
             </a>
-            <!-- Left Arrow -->
-            <a href="javascript:history.back()" class="back-arrow" title="Back">
+	    <a href="javascript:history.back()" class="back-arrow" title="Back">
               &laquo;
             </a>
         </div>
-
-        <!-- Logout button -->
+	
+    <div class="container-fluid justify-content-end d-flex align-items-center" style="height: 75px;">
+	<!-- Logout button -->
         <div class="d-flex">
             <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
         </div>
+        
     </div>
 </nav>
 
@@ -306,20 +325,23 @@
 
     <div class="chat-window" id="chat-window">
       <!-- Welcome message -->
-      <div class="welcome-message">
-        <i class="fas fa-robot me-2"></i>
-        We are delighted to have you here in the LIM at scale.AI Chat room!
-      </div>
+<div class="welcome-message">
+    <div class="message-avatar bot-avatar justify-content-start">
+        <i class="fas fa-robot"></i>
+    </div>
+    <div class="message-content" style="justify-content:center">
+        We are delighted to have you here in the Conversational Intelligence Chat room!
+    </div>
+</div>
 
-      <!-- Initial bot message -->
-      <div class="message bot-message">
-        <div class="message-avatar bot-avatar">
-          <i class="fas fa-robot"></i>
-        </div>
-        <div class="message-content">
-          Greetings! How can I help you today?
-        </div>
-      </div>
+<div class="message bot-message">
+    <div class="message-avatar bot-avatar" style = "justify-content:center">
+        <i class="fas fa-robot"></i>
+    </div>
+    <div class="message-content">
+        Greetings! How can I help you today?
+    </div>
+</div>
 
       <!-- Typing indicator -->
       <div class="typing-indicator" id="typing-indicator">

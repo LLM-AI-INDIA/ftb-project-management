@@ -101,7 +101,7 @@
     height: 100%;
     border: none;
     border-radius: 12px;
-    border: 1px solid #e2e6ea !important; /* Lighter border */
+    border: 10px solid #e2e6ea !important; /* Lighter border */
 }
 
 .module-card:hover {
@@ -112,7 +112,8 @@
 .module-icon {
     height: 75px !important; /* Slightly larger icons */
     margin-bottom: 0.5rem;
-    border-width: 3px;
+    border: 10px solid #e9ecef !important; /* Add a light gray border */
+    border-radius: 50%; /* Keep the border-radius if you want rounded logos */
 }
 
 .module-name {
@@ -129,13 +130,13 @@
     background: #e9ecef !important; /* Lighter horizontal line color */
     height: 1px; /* Thinner horizontal rule */
     border: none;
-    margin: 20px auto; /* Center align the hr and add space around it */
+    margin: 40px auto; /* Center align the hr and add space around it */
     width: 80%; /* Adjust width as needed, 80% of the container width */
 }
 
 /* Make all cards lighter by default */
 .card {
-    border: 1px solid #e2e6ea !important;
+    border: 3px solid #e2e6ea !important;
 }
 
 /* Lighten horizontal lines globally */

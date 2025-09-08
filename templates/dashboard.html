@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body class="bg-light">
+<body class="bg-white">
 
 <!-- Navbar with white background for logo -->
 <nav class="navbar navbar-light bg-white shadow-sm sticky-top" style="height: 85px;">
@@ -40,23 +40,23 @@
     </h2>
     
     <!-- Lighter horizontal line -->
-    <div class="light-hr"></div>
+    <div style="height: 2px; width: 90vw; background: #f8f8f8; margin: 30px 0 5px 0; position: relative; left: 50%; right: 50%; transform: translateX(-50%); border: none; margin-bottom: 40px"></div>
 
     <!-- Outer box with lighter border -->
     <div class="light-border" style="
+	border: 2px solid #ccd0d2;
         border-radius: 22px;
         background: #fff;
         padding: 25px 50px;
         margin: 0 auto;
         width: 920px;
-        display: block;
-	border-width:4px;"
+        display: block;"
     >
     <div class="row row-cols-1 row-cols-md-3 g-0" style="margin:0;">
         {% for dept in departments %}
             <div class="col d-flex justify-content-center" style="padding: 10px 4px; border-width:3px;">
                 <a href="{{ url_for('modules', dept=dept.key) }}" style="text-decoration:none;">
-                  <div class="card dashboard-tile d-flex align-items-center justify-content-center" style="width: 210px; height: 150px; border: 5px solid #B0B1B5; border-radius:20px; box-shadow: none; margin: 0;">
+                  <div class="card dashboard-tile d-flex align-items-center justify-content-center" style="width: 210px; height: 150px; border: 2px solid #888A90; border-radius:20px; box-shadow: none; margin: 0;">
                         {% if dept.icon == 'edd.jpeg' or dept.icon == 'ranchocordova.jpeg' %}
                             <img src="{{ url_for('static', filename='icons/' + dept.icon) }}"
                                 alt="{{ dept.name }}"
