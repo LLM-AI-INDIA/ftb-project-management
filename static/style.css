@@ -65,8 +65,11 @@
 }
 
 .dashboard-tile:hover {
-    box-shadow: 20px 20px 60px rgba(0,0,0,0.06);
-    border-color: #c0e6d0 !important; /* Lighter green on hover */
+    border: 2px solid #c0e6d0 !important; /* Thicker border, same light color */
+    box-shadow:
+        0 0 12px 4px #c0e6d0,            /* Outward light glow -- adjust blur/spread for strength */
+        20px 20px 60px rgba(0,0,0,0.1);      /* Subtle depth shadow */
+    transition: border 0.05s, box-shadow 0.18s;
 }
 
 /* Text colors as shown in PPT */
