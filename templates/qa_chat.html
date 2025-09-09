@@ -289,6 +289,58 @@
     display: block;
     content: "";
   }
+
+  /* Feedback styling */
+  .feedback-row {
+    width: 100%;
+    margin-top: 10px;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding-left: 14px;
+  }
+  .feedback-buttons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .feedback-btn {
+    font-size: 1.25rem;
+    padding: 7px 13px;
+    border-radius: 50%;
+    background: #f5f8ff;
+    border: 2px solid #e9ecef;
+    transition: background 0.18s, border 0.18s;
+  }
+  .feedback-btn:hover {
+    background: #e6f1fa;
+    border-color: #667eea;
+  }
+  .feedback-container {
+    margin-top: 8px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding-left: 30px;
+  }
+
+  .feedback-input {
+    min-width: 320px;
+    width: 680px; /* change this value for longer box */
+    max-width: 65vw;
+    font-size: 1.06rem;
+    padding: 10px 14px;
+  }
+
+  .feedback-thankyou {
+    margin-top: 4px;
+    margin-bottom: 8px;
+    padding-left: 10px;
+  }
+
   </style>
 </head>
 <body>
@@ -454,6 +506,17 @@
       botDiv.innerHTML = `<div class="message-content">${formattedAnswer}</div>`;
       chatWindow.appendChild(botDiv);
 
+      // Feedback buttons display after the bot message
+      const feedbackRow = document.createElement('div');
+      feedbackRow.className = 'feedback-row d-flex justify-content-start align-items-center';
+      feedbackRow.innerHTML = `
+        <div class="feedback-buttons">
+          <button class="btn btn-light btn feedback-btn thumbs-up" title="Thumbs Up"><i class="fas fa-thumbs-up"></i></button>
+          <button class="btn btn-light btn feedback-btn thumbs-down" title="Thumbs Down"><i class="fas fa-thumbs-down"></i></button>
+        </div>
+      `;
+      chatWindow.appendChild(feedbackRow);
+
       // Scroll to bottom again
       chatWindow.scrollTop = chatWindow.scrollHeight;
     } catch (error) {
@@ -469,6 +532,36 @@
       chatWindow.scrollTop = chatWindow.scrollHeight;
     }
   });
+
+  // Feedback thumbs up thumbs down handling
+  chatWindow.addEventListener('click', function(e) {
+    if (e.target.closest('.thumbs-up')) {
+      e.target.closest('.btn').classList.add('btn-success');
+    } else if (e.target.closest('.thumbs-down')) {
+      const parent = e.target.closest('.feedback-row');
+      if (!parent.querySelector('.feedback-container')) {
+        const feedbackContainer = document.createElement('div');
+        feedbackContainer.className = 'feedback-container';
+        feedbackContainer.innerHTML = `
+          <input type="text" class="form-control form-control-lg" placeholder="Tell us what could be improved..." style="width:340px;">
+          <button class="btn btn-primary btn-lg submit-feedback" style="margin-left:10px;">Submit</button>
+        `;
+        parent.appendChild(feedbackContainer);
+      }
+    }
+  });
+
+  chatWindow.addEventListener('click', function(e) {
+    if (e.target.classList.contains('submit-feedback')) {
+      const input = e.target.parentElement.querySelector('input');
+      if (input && input.value.trim()) {
+        input.disabled = true;
+        e.target.disabled = true;
+        e.target.textContent = 'Thank you!';
+      }
+    }
+  });
+
 </script>
 
 </body>
