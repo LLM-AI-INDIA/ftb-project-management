@@ -7,13 +7,14 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='mobile.css') }}">
 </head>
 <body class="bg-white">
 
 <!-- Navbar with white background for logo -->
 <nav class="navbar navbar-light bg-white shadow-sm sticky-top" style="height: 85px;">
     <div class="container-fluid d-flex align-items-center" style="height: 75px;">
-        
+
         <!-- Logo with white background -->
         <div class="d-flex align-items-center logo-container">
             <a href="{{ url_for('login') }}">
@@ -35,16 +36,16 @@
 <!-- Page Content -->
 <div class="container py-5">
     <!-- Title with new color -->
-    <h2 class="text-center dark-blue-text" style="font-size:2.3rem; border:2px; font-weight:700; margin-top: 25px; margin-bottom:35px; letter-spacing: -0.5px;">
+    <h2 class="text-center dark-blue-text dashboard-title" style="font-size:2.3rem; border:2px; font-weight:700; margin-top: 25px; margin-bottom:35px; letter-spacing: -0.5px;">
         Pretrained, Domain-Tuned AI Agents for the Public Sector
     </h2>
-    
+
     <!-- Lighter horizontal line -->
-    <div style="height: 4px; width: 90vw; background: #f8f8f8; margin: 30px 0 5px 0; position: relative; left: 50%; right: 50%; transform: translateX(-50%); border: none; margin-bottom: 40px"></div>
+    <div class="horizontal-line" style="height: 4px; width: 90vw; background: #f8f8f8; margin: 30px 0 5px 0; position: relative; left: 50%; right: 50%; transform: translateX(-50%); border: none; margin-bottom: 40px"></div>
 
     <!-- Outer box with lighter border -->
-    <div class="light-border" style="
-	border: 5px solid #ccd0d2;
+    <div class="light-border dashboard-container" style="
+    border: 5px solid #ccd0d2;
         border-radius: 22px;
         background: #fff;
         padding: 25px 50px;
@@ -52,34 +53,19 @@
         width: 920px;
         display: block;"
     >
-    <div class="row row-cols-1 row-cols-md-3 g-0" style="margin:0;">
-        {% for dept in departments %}
-            <div class="col d-flex justify-content-center" style="padding: 10px 4px;">
-                <a href="{{ url_for('modules', dept=dept.key) }}" style="text-decoration:none;">
-                  <div class="card dashboard-tile d-flex align-items-center justify-content-center" style="width: 210px; height: 150px; border: 2px solid #888A90; border-radius:20px; box-shadow: none; margin: 0;">
-                        {% if dept.icon == 'edd.jpeg' or dept.icon == 'ranchocordova.jpeg' %}
+        <div class="row row-cols-1 row-cols-md-3 g-0 dashboard-grid" style="margin:0;">
+            {% for dept in departments %}
+                <div class="col d-flex justify-content-center" style="padding: 10px 4px;">
+                    <a href="{{ url_for('modules', dept=dept.key) }}" style="text-decoration:none;">
+                        <div class="card dashboard-tile">
                             <img src="{{ url_for('static', filename='icons/' + dept.icon) }}"
-                                alt="{{ dept.name }}"
-                                style="max-width: 190px; max-height: 150px; object-fit: contain;">
-                        {% elif dept.icon in ['ftb.jpeg','dmv.jpeg', 'cdfa.jpeg'] %}
-                            <img src="{{ url_for('static', filename='icons/' + dept.icon) }}"
-                                alt="{{ dept.name }}"
-                                style="max-width: 190px; max-height: 130px; object-fit: contain;">
-                        {% elif dept.icon == 'ftb.jpeg' %}
-                            <img src="{{ url_for('static', filename='icons/' + dept.icon) }}"
-                                alt="{{ dept.name }}"
-                                style="max-width: 200px; max-height: 170px; object-fit: contain;">
-                        {% else %}
-                            <img src="{{ url_for('static', filename='icons/' + dept.icon) }}"
-                                alt="{{ dept.name }}"
-                                style="max-width: 160px; max-height: 120px; object-fit:contain;">
-                        {% endif %}
-                    </div>
-                </a>
-            </div>
-        {% endfor %}
+                                alt="{{ dept.name }}">
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
     </div>
-</div>
 
 </div>
 
