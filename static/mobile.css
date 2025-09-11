@@ -144,8 +144,8 @@
     }
 
     .module-icon {
-        width: 100% !important;
-        height: auto !important;
+        width: 60px !important;
+        height: 60px !important;
     }
 
     .modules-grid {
@@ -229,8 +229,8 @@
     }
 
     .module-icon {
-        width: 100% !important;
-        height: auto !important;
+        width: 45px !important;
+        height: 45px !important;
     }
 }
 
