@@ -2,29 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FTB - Enterprise Q&A</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet"  href="{{ url_for('static', filename='style.css') }}">
-  <style>
-    body {
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
+  <style>
+    /* Base styles - apply to all screen sizes */
+    body {
       background-color: #f5f7fa;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
+
     .main-container {
       flex: 1;
       display: flex;
       flex-direction: column;
       width: 95%;
-      max-width: 1400px; /* Wider for functionality */
+      max-width: 1400px;
       margin: 0 auto;
       padding: 20px 15px;
     }
+
     .chat-container {
       flex: 1;
       background-color: #ffffff;
@@ -38,78 +42,80 @@
       border: 1px solid #e9ecef;
     }
 
-.chat-header {
-    background-color: #667eea;
-    color: white;
-    padding: 25px;
-    text-align: center;
-    position: relative;
-}
+    .chat-header {
+      background-color: #667eea;
+      color: white;
+      padding: 25px;
+      text-align: center;
+      position: relative;
+    }
 
-.chat-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255,255,255,0.1);
-    backdrop-filter: blur(10px);
-}
+    .chat-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+    }
 
-.chat-header h4 {
-    position: relative;
-    z-index: 1;
-    margin: 0;
-    font-weight: 300;
-    font-size: 1.5rem;
-}
-    
-.chat-window {
-    flex: 1;
-    overflow-y: auto;
-    padding: 30px;
-    background: #ffffff;
-    position: relative;
-}
+    .chat-header h4 {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      font-weight: 300;
+      font-size: 1.5rem;
+    }
 
-.message {
-    margin-bottom: 25px;
-    display: flex;
-    align-items: center;
-    animation: fadeInUp 0.3s ease-out;
-}
+    .chat-window {
+      flex: 1;
+      overflow-y: auto;
+      padding: 30px;
+      background: #ffffff;
+      position: relative;
+    }
+
+    .message {
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+      animation: fadeInUp 0.3s ease-out;
+    }
+
     .user-message {
       flex-direction: row-reverse;
     }
+
     .bot-message {
       flex-direction: row;
     }
 
+    .message-avatar {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
 
-.message-avatar {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    /* margin: 0;*/
-    flex-shrink: 0;
-}
-    
     .user-avatar {
       background-color: #ff9a9e;
       color: white;
     }
+
     .bot-avatar {
       justify-content: center;
       background-color: #a8edea;
       color: #555;
     }
+
     .message-content {
-      max-width: 85%; /* Wider for better functionality */
+      max-width: 85%;
       padding: 18px 22px;
       border-radius: 20px;
       word-wrap: break-word;
@@ -119,17 +125,20 @@
       position: relative;
       box-shadow: 0 2px 15px rgba(0,0,0,0.08);
     }
+
     .user-message .message-content {
       background-color: #667eea;
       color: white;
       border-bottom-right-radius: 5px;
     }
+
     .bot-message .message-content {
       background-color: #f8f9fa;
       color: #333;
       border: 1px solid #e9ecef;
       border-bottom-left-radius: 5px;
     }
+
     .chat-input {
       padding: 30px;
       background-color: #ffffff;
@@ -137,25 +146,26 @@
       border-top: 1px solid rgba(0,0,0,0.1);
     }
 
-.input-container {
-    background: white;
-    border-radius: 25px;
-    padding: 8px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    border: 1px solid #e9ecef;
-    display: flex;
-    align-items: center;
-    transition: all 0.3s ease;
-}
+    .input-container {
+      background: white;
+      border-radius: 25px;
+      padding: 8px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      border: 1px solid #e9ecef;
+      display: flex;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
 
-.input-container:focus-within {
-    box-shadow: 0 5px 25px rgba(102, 126, 234, 0.3);
-    border-color: #667eea;
-}
-    
+    .input-container:focus-within {
+      box-shadow: 0 5px 25px rgba(102, 126, 234, 0.3);
+      border-color: #667eea;
+    }
+
     .navbar-brand img {
       height: 50px;
     }
+
     .page-title {
       text-align: center;
       margin: 25px 0;
@@ -164,6 +174,7 @@
       font-size: 2rem;
       text-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
+
     #prompt {
       border: none;
       outline: none;
@@ -172,6 +183,7 @@
       font-size: 16px;
       background: transparent;
     }
+
     .send-btn {
       background-color: #667eea;
       border: none;
@@ -185,43 +197,47 @@
       gap: 8px;
       font-weight: 500;
     }
+
     .send-btn:hover {
       background-color: #5a6fd8;
       transform: translateY(-1px);
       box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
     }
+
     .navbar {
       background-color: #ffffff !important;
       backdrop-filter: blur(10px);
       border-bottom: 1px solid rgba(0,0,0,0.1);
     }
+
     .navbar .container-fluid {
-      max-width: 100%; /* Matching the main container width */
+      max-width: 100%;
       margin: 0 auto;
     }
+
     .btn-outline-danger {
       border-radius: 20px;
       transition: all 0.3s ease;
     }
+
     .btn-outline-danger:hover {
       transform: translateY(-1px);
       box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
     }
 
-    
-.welcome-message {
-    background-color: #a8edea;
-    padding: 5px;
-    border-radius: 15px;
-    margin-bottom: 20px;
-    text-align: center;
-    color: #555;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    justify-content: start;
-}
-    
+    .welcome-message {
+      background-color: #a8edea;
+      padding: 5px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      text-align: center;
+      color: #555;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: start;
+    }
+
     @keyframes fadeInUp {
       from {
         opacity: 0;
@@ -232,6 +248,7 @@
         transform: translateY(0);
       }
     }
+
     .typing-indicator {
       display: none;
       padding: 15px 22px;
@@ -243,10 +260,12 @@
       border: 1px solid #e9ecef;
       box-shadow: 0 2px 15px rgba(0,0,0,0.08);
     }
+
     .typing-dots {
       display: flex;
       gap: 4px;
     }
+
     .typing-dots span {
       width: 8px;
       height: 8px;
@@ -254,12 +273,15 @@
       background-color: #999;
       animation: typing 1.4s infinite;
     }
+
     .typing-dots span:nth-child(2) {
       animation-delay: 0.2s;
     }
+
     .typing-dots span:nth-child(3) {
       animation-delay: 0.4s;
     }
+
     @keyframes typing {
       0%, 60%, 100% {
         transform: translateY(0);
@@ -270,103 +292,289 @@
         opacity: 1;
       }
     }
-      .message-content ul {
-    margin: 0.5rem 0;
-    padding-left: 1.5rem;
-  }
-  .message-content li {
-    margin: 0.25rem 0;
-    line-height: 1.4;
-  }
-  .message-content strong {
-    font-weight: 600;
-  }
-  .message-content em {
-    font-style: italic;
-  }
-  .message-content br {
-    margin-bottom: 0.5rem;
-    display: block;
-    content: "";
-  }
 
-  /* Feedback styling */
-  .feedback-row {
-    width: 100%;
-    margin-top: 10px;
-    margin-bottom: 4px;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    padding-left: 14px;
-  }
-  .feedback-buttons {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .feedback-btn {
-    font-size: 1.25rem;
-    padding: 7px 13px;
-    border-radius: 50%;
-    background: #f5f8ff;
-    border: 2px solid #e9ecef;
-    transition: background 0.18s, border 0.18s;
-  }
-  .feedback-btn:hover {
-    background: #e6f1fa;
-    border-color: #667eea;
-  }
-  .feedback-container {
-    margin-top: 8px;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    padding-left: 30px;
-  }
+    .message-content ul {
+      margin: 0.5rem 0;
+      padding-left: 1.5rem;
+    }
 
-  .feedback-input {
-    min-width: 320px;
-    width: 680px; /* change this value for longer box */
-    max-width: 65vw;
-    font-size: 1.06rem;
-    padding: 10px 14px;
-  }
+    .message-content li {
+      margin: 0.25rem 0;
+      line-height: 1.4;
+    }
 
-  .feedback-thankyou {
-    margin-top: 4px;
-    margin-bottom: 8px;
-    padding-left: 10px;
-  }
+    .message-content strong {
+      font-weight: 600;
+    }
+
+    .message-content em {
+      font-style: italic;
+    }
+
+    .message-content br {
+      margin-bottom: 0.5rem;
+      display: block;
+      content: "";
+    }
+
+    /* Feedback styling */
+    .feedback-row {
+      width: 100%;
+      margin-top: 10px;
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      padding-left: 14px;
+    }
+
+    .feedback-buttons {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .feedback-btn {
+      font-size: 1.25rem;
+      padding: 7px 13px;
+      border-radius: 50%;
+      background: #f5f8ff;
+      border: 2px solid #e9ecef;
+      transition: background 0.18s, border 0.18s;
+    }
+
+    .feedback-btn:hover {
+      background: #e6f1fa;
+      border-color: #667eea;
+    }
+
+    .feedback-container {
+      margin-top: 8px;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding-left: 30px;
+    }
+
+    .feedback-input {
+      min-width: 320px;
+      width: 680px;
+      max-width: 65vw;
+      font-size: 1.06rem;
+      padding: 10px 14px;
+    }
+
+    .feedback-thankyou {
+      margin-top: 4px;
+      margin-bottom: 8px;
+      padding-left: 10px;
+    }
+
+    /* MOBILE STYLES ONLY - OVERRIDE ONLY WHAT'S NEEDED */
+    @media (max-width: 767px) {
+      .main-container {
+        padding: 15px 10px;
+      }
+
+      .navbar {
+        height: 70px !important;
+      }
+
+      .navbar .container-fluid {
+        height: 60px !important;
+        padding: 0 10px !important;
+      }
+
+      .navbar img {
+        height: 45px !important;
+      }
+
+      .page-title {
+        font-size: 1.6rem !important;
+        margin-top: 15px !important;
+        margin-bottom: 20px !important;
+        padding: 0 10px;
+        line-height: 1.3;
+      }
+
+      .chat-container {
+        border-radius: 15px;
+        min-height: calc(100vh - 200px);
+      }
+
+      .chat-header {
+        padding: 20px 15px;
+      }
+
+      .chat-header h4 {
+        font-size: 1.2rem;
+      }
+
+      .chat-window {
+        padding: 20px 15px;
+      }
+
+      .chat-input {
+        padding: 20px 15px;
+      }
+
+      .message {
+        margin-bottom: 20px;
+        align-items: flex-start;
+      }
+
+      .message-avatar {
+        width: 35px;
+        height: 35px;
+        font-size: 16px;
+      }
+
+      .message-content {
+        max-width: 80%;
+        padding: 12px 16px;
+        border-radius: 15px;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      .user-message .message-content {
+        margin-right: 10px;
+      }
+
+      .bot-message .message-content {
+        margin-left: 10px;
+      }
+
+      .input-container {
+        border-radius: 20px;
+        padding: 6px;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      #prompt {
+        width: 100%;
+        padding: 12px 15px;
+        font-size: 15px;
+        border-radius: 15px;
+      }
+
+      .send-btn {
+        padding: 10px 20px;
+        border-radius: 15px;
+        width: 100%;
+        font-size: 14px;
+        justify-content: center;
+      }
+
+      .welcome-message {
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 15px;
+        gap: 10px;
+        font-size: 14px;
+      }
+
+      .feedback-row {
+        padding-left: 45px;
+        margin-top: 8px;
+      }
+
+      .feedback-btn {
+        font-size: 1rem;
+        padding: 5px 10px;
+      }
+
+      .feedback-container {
+        padding-left: 15px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+
+      .feedback-input {
+        width: 100%;
+        min-width: auto;
+        max-width: 100%;
+        font-size: 0.9rem;
+        padding: 8px 12px;
+      }
+
+      .typing-indicator {
+        margin-left: 45px;
+        padding: 12px 16px;
+        border-radius: 15px;
+      }
+    }
+
+    /* Extra small mobile devices */
+    @media (max-width: 480px) {
+      .main-container {
+        padding: 10px 5px;
+      }
+
+      .page-title {
+        font-size: 1.4rem !important;
+        margin-bottom: 15px;
+        padding: 0 5px;
+      }
+
+      .chat-window {
+        padding: 15px 10px;
+      }
+
+      .chat-input {
+        padding: 15px 10px;
+      }
+
+      .message-content {
+        max-width: 85%;
+        padding: 10px 14px;
+        font-size: 13px;
+      }
+
+      .message-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+      }
+
+      #prompt {
+        font-size: 14px;
+        padding: 10px 12px;
+      }
+
+      .send-btn {
+        font-size: 13px;
+        padding: 8px 16px;
+      }
+
+      .welcome-message {
+        font-size: 13px;
+        padding: 12px;
+      }
+    }
 
   </style>
 </head>
 <body>
 
-<!-- Navbar -->
+<!-- Rest of your HTML stays exactly the same -->
 <nav class="navbar navbar-light bg-white shadow-sm sticky-top" style="height: 85px;">
     <div class="container-fluid d-flex align-items-center" style="height: 75px;">
-        
-        <!-- Logo with white background -->
         <div class="d-flex align-items-center logo-container">
             <a href="{{ url_for('login') }}">
                 <img src="{{ url_for('static', filename='llm.png') }}" alt="Logo" style="height:55px; width:auto;">
             </a>
-            <!-- Left Arrow -->
-            <a href="javascript:history.back()" class="back-arrow" title="Back">
-              &laquo;
-            </a>
+            <a href="javascript:history.back()" class="back-arrow" title="Back">&laquo;</a>
         </div>
-
-        <!-- Logout button -->
         <div class="d-flex">
             <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
         </div>
     </div>
 </nav>
-
 
 <div class="main-container">
   <h2 class="text-center dark-blue-text" style="font-size:2.3rem; font-weight:700; margin-top: 25px; margin-bottom:35px; letter-spacing: -0.5px;">
@@ -380,26 +588,22 @@
     </div>
 
     <div class="chat-window" id="chat-window">
-      <!-- Welcome message -->
-<div class="welcome-message">
-    <div class="message-avatar bot-avatar justify-content-start">
-        <i class="fas fa-robot"></i>
-    </div>
-
+      <div class="welcome-message">
+        <div class="message-avatar bot-avatar justify-content-start">
+            <i class="fas fa-robot"></i>
+        </div>
         We are delighted to have you here in the Conversational Intelligence Chat room!
+      </div>
 
-</div>
+      <div class="message bot-message">
+        <div class="message-avatar bot-avatar" style="justify-content:center">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+            Greetings! How can I help you today?
+        </div>
+      </div>
 
-<div class="message bot-message">
-    <div class="message-avatar bot-avatar" style = "justify-content:center">
-        <i class="fas fa-robot"></i>
-    </div>
-    <div class="message-content">
-        Greetings! How can I help you today?
-    </div>
-</div>
-
-      <!-- Typing indicator -->
       <div class="typing-indicator" id="typing-indicator">
         <div class="typing-dots">
           <span></span>
@@ -431,56 +635,41 @@
   const promptInput = document.getElementById('prompt');
   const chatWindow = document.getElementById('chat-window');
 
-  // Set focus to input field on page load
   window.addEventListener('load', () => {
     promptInput.focus();
   });
 
-  // Function to format the response text
   function formatResponse(text) {
-    // Replace markdown-like syntax with HTML
     let formattedText = text
-      // Convert line breaks
       .replace(/\n/g, '<br>')
-      // Convert bullet points
       .replace(/\*\s*(.+?)(?=\n|$)/g, '<li>$1</li>')
-      // Convert numbered lists
       .replace(/(\d+)\.\s*(.+?)(?=\n|$)/g, '<li>$2</li>')
-      // Convert bold text
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      // Convert italic text
       .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      // Convert section headers
       .replace(/#{1,6}\s*(.+?)(?=\n|$)/g, '<strong>$1</strong><br>');
-    
-    // Wrap lists in ul tags if we have list items
+
     if (formattedText.includes('<li>')) {
       formattedText = formattedText.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
     }
-    
+
     return formattedText;
   }
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const userMessage = promptInput.value.trim();
-    
+
     if (!userMessage) return;
 
-    // Display user message
     const userDiv = document.createElement('div');
     userDiv.className = 'message user-message';
     userDiv.innerHTML = `<div class="message-content">${userMessage}</div>`;
     chatWindow.appendChild(userDiv);
 
-    // Clear input
     promptInput.value = '';
-    
-    // Scroll to bottom
     chatWindow.scrollTop = chatWindow.scrollHeight;
 
     try {
-      // Send to backend QA API
       const response = await fetch('/qa_api', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -493,20 +682,18 @@
 
       const data = await response.json();
 
-      // Display bot response - properly formatted
       let answerText = data.answer;
       if (typeof answerText !== 'string') {
         answerText = JSON.stringify(answerText);
       }
-      
+
       const formattedAnswer = formatResponse(answerText);
-      
+
       const botDiv = document.createElement('div');
       botDiv.className = 'message bot-message';
       botDiv.innerHTML = `<div class="message-content">${formattedAnswer}</div>`;
       chatWindow.appendChild(botDiv);
 
-      // Feedback buttons display after the bot message
       const feedbackRow = document.createElement('div');
       feedbackRow.className = 'feedback-row d-flex justify-content-start align-items-center';
       feedbackRow.innerHTML = `
@@ -517,23 +704,19 @@
       `;
       chatWindow.appendChild(feedbackRow);
 
-      // Scroll to bottom again
       chatWindow.scrollTop = chatWindow.scrollHeight;
     } catch (error) {
       console.error('Error:', error);
-      
-      // Display error message
+
       const errorDiv = document.createElement('div');
       errorDiv.className = 'message bot-message';
       errorDiv.innerHTML = `<div class="message-content">Sorry, I encountered an error. Please try again.</div>`;
       chatWindow.appendChild(errorDiv);
-      
-      // Scroll to bottom
+
       chatWindow.scrollTop = chatWindow.scrollHeight;
     }
   });
 
-  // Feedback thumbs up thumbs down handling
   chatWindow.addEventListener('click', function(e) {
     if (e.target.closest('.thumbs-up')) {
       e.target.closest('.btn').classList.add('btn-success');
@@ -543,9 +726,10 @@
         const feedbackContainer = document.createElement('div');
         feedbackContainer.className = 'feedback-container';
         feedbackContainer.innerHTML = `
-          <input type="text" class="form-control form-control-lg" placeholder="Tell us what could be improved..." style="width:340px;">
-          <button class="btn btn-primary btn-lg submit-feedback" style="margin-left:10px;">Submit</button>
+         <input type="text" class="form-control feedback-input" placeholder="Tell us what could be improved...">
+         <button class="btn btn-primary submit-feedback">Submit</button>
         `;
+
         parent.appendChild(feedbackContainer);
       }
     }
