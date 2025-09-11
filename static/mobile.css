@@ -65,7 +65,7 @@
         margin: 0 !important;
         padding: 0 8px !important;
         line-height: 1 !important;
-        font-size: 1.5rem !important;
+        font-size: 30rem !important;
         text-decoration: none !important;
         color: #333 !important;
     }
@@ -144,8 +144,8 @@
     }
 
     .module-icon {
-        width: 60px !important;
-        height: 60px !important;
+        width: 100% !important;
+        height: auto !important;
     }
 
     .modules-grid {
@@ -229,8 +229,8 @@
     }
 
     .module-icon {
-        width: 45px !important;
-        height: 45px !important;
+        width: 100% !important;
+        height: auto !important;
     }
 }
 
