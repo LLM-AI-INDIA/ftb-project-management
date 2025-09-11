@@ -2,33 +2,32 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Multi-Agent Orchestration</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='mobile.css') }}">
 </head>
 <body class="bg-light">
 
-<div class="container d-flex flex-column align-items-center justify-content-center vh-100">
+<div class="container login-container">
 
     <!-- Logo -->
-    <div class="mb-4">
-      <img src="{{ url_for('static', filename='llm.png') }}" alt="Logo" style="height: 110px; display: block; margin: 0 auto; margin-top: 0px;">
-        <!-- Light green underline, full width -->
-        <div style="height: 2px; width: 90vw; background: #e9ecef; margin: 30px 0 5px 0; position: relative; left: 50%; right: 50%; transform: translateX(-50%); border: none;"></div>
+    <div class="logo-section">
+        <img src="{{ url_for('static', filename='llm.png') }}" alt="Logo">
+        <!-- Light underline -->
+        <div class="logo-underline"></div>
     </div>
 
     <!-- Title -->
-    <h1 style="font-size:2.75rem;font-weight:650;text-align:center;margin:0px 0 20px 0;">
+    <h1 class="login-title">
         Multi-Agent Orchestration for the Enterprise
     </h1>
 
     <!-- Card -->
-    <div style="margin-top: 15px; margin-bottom: 15px; padding: 10px 130px 25px 130px;">
-
-        <div class="card shadow p-4"
-        style="width: 360px; border-radius: 14px; border: 2px solid #e2e6ea; margin-top: 10px;">
-
-            <h5 class="mb-3 text-center" style="font-size: 1.45rem; font-weight: 600; letter-spacing: -0.5px;">
+    <div class="card-wrapper">
+        <div class="card shadow login-card">
+            <h5 class="card-title text-center">
                 Log in
             </h5>
 
@@ -54,22 +53,22 @@
                 <button type="submit" class="btn btn-primary w-100 mb-3">Log in →</button>
             </form>
 
-            <div class="mb-1 text-end">
+            <div class="text-end forgot-password">
                 <a href="#" class="small text-decoration-none">Forgot password?</a>
             </div>
 
-            <div class="form-check mt-2">
+            <div class="form-check">
                 <input class="form-check-input" type="checkbox" id="guardrails" checked>
-                <label class="form-check-label" for="guardrails" style="font-size:0.93rem;">
-                  Enable Guardrails
+                <label class="form-check-label" for="guardrails">
+                    Enable Guardrails
                 </label>
             </div>
 
-            <div class="form-check mt-1">
-            <input class="form-check-input" type="checkbox" id="roll-level-security" checked>
-            <label class="form-check-label" for="roll-level-security" style="font-size:0.93rem;">
-              Enable Roll Level Security
-            </label>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="roll-level-security" checked>
+                <label class="form-check-label" for="roll-level-security">
+                    Enable Roll Level Security
+                </label>
             </div>
 
         </div>
