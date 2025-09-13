@@ -67,7 +67,7 @@
         line-height: 1 !important;
         font-size: 1.5rem !important;
         text-decoration: none !important;
-        color: #333 !important;
+        color: #4cd95c !important;
     }
 
     /* Button alignment in navbar */
@@ -107,7 +107,7 @@
     }
 
     .back-arrow {
-        font-size: 1.3rem !important;
+        font-size: 30px !important;
         padding: 0 6px !important;
     }
 
