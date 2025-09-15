@@ -340,12 +340,29 @@
       border-radius: 50%;
       background: #f5f8ff;
       border: 2px solid #e9ecef;
-      transition: background 0.18s, border 0.18s;
+      transition: all 0.3s ease;
+      color: #6c757d;
     }
 
     .feedback-btn:hover {
       background: #e6f1fa;
       border-color: #667eea;
+    }
+
+    /* Thumbs up active state - GREEN */
+    .feedback-btn.thumbs-up.active {
+      background-color: #28a745 !important;
+      border-color: #28a745 !important;
+      color: white !important;
+      transform: scale(1.1);
+    }
+
+    /* Thumbs down active state - RED */
+    .feedback-btn.thumbs-down.active {
+      background-color: #dc3545 !important;
+      border-color: #dc3545 !important;
+      color: white !important;
+      transform: scale(1.1);
     }
 
     .feedback-container {
@@ -691,7 +708,12 @@
 
       const botDiv = document.createElement('div');
       botDiv.className = 'message bot-message';
-      botDiv.innerHTML = `<div class="message-content">${formattedAnswer}</div>`;
+      botDiv.innerHTML = `
+        <div class="message-avatar bot-avatar" style="justify-content:center">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">${formattedAnswer}</div>
+      `;
       chatWindow.appendChild(botDiv);
 
       const feedbackRow = document.createElement('div');
@@ -710,7 +732,12 @@
 
       const errorDiv = document.createElement('div');
       errorDiv.className = 'message bot-message';
-      errorDiv.innerHTML = `<div class="message-content">Sorry, I encountered an error. Please try again.</div>`;
+      errorDiv.innerHTML = `
+        <div class="message-avatar bot-avatar" style="justify-content:center">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">Sorry, I encountered an error. Please try again.</div>
+      `;
       chatWindow.appendChild(errorDiv);
 
       chatWindow.scrollTop = chatWindow.scrollHeight;
@@ -719,8 +746,34 @@
 
   chatWindow.addEventListener('click', function(e) {
     if (e.target.closest('.thumbs-up')) {
-      e.target.closest('.btn').classList.add('btn-success');
+      const currentBtn = e.target.closest('.btn');
+      const feedbackRow = currentBtn.closest('.feedback-row');
+      const thumbsDownBtn = feedbackRow.querySelector('.thumbs-down');
+
+      // Remove active state from thumbs down
+      thumbsDownBtn.classList.remove('active');
+
+      // Toggle thumbs up active state
+      currentBtn.classList.toggle('active');
+
+      // Remove any existing feedback container when thumbs up is clicked
+      const existingFeedback = feedbackRow.querySelector('.feedback-container');
+      if (existingFeedback) {
+        existingFeedback.remove();
+      }
+
     } else if (e.target.closest('.thumbs-down')) {
+      const currentBtn = e.target.closest('.btn');
+      const feedbackRow = currentBtn.closest('.feedback-row');
+      const thumbsUpBtn = feedbackRow.querySelector('.thumbs-up');
+
+      // Remove active state from thumbs up
+      thumbsUpBtn.classList.remove('active');
+
+      // Add active state to thumbs down
+      currentBtn.classList.add('active');
+
+      // Add feedback input if it doesn't exist
       const parent = e.target.closest('.feedback-row');
       if (!parent.querySelector('.feedback-container')) {
         const feedbackContainer = document.createElement('div');
