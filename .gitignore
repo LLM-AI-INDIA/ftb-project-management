@@ -21,6 +21,7 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+reset_auth.py
 MANIFEST
 *~
 # Virtual environments
@@ -31,6 +32,9 @@ ENV/
 # Environment variables
 .env
 .venv
+credentials.json
+token.json
+
 
 # IDE
 .vscode/
