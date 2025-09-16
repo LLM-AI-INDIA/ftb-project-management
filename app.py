@@ -458,7 +458,7 @@ def inspect_cache():
 @app.route("/test_discovery")
 @login_required 
 def test_discovery():
-    http_server_url = "http://localhost:8000"
+    http_server_url = "http://54.172.238.47:8000"
     
     try:
         response = requests.post(f"{http_server_url}/call_tool", json={
@@ -546,3 +546,4 @@ def debug():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
