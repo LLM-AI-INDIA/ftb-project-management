@@ -147,6 +147,77 @@ def read_file_content(http_server_url, file_id, file_name):
     
     return None
 
+
+def extract_viz_data_from_response(response_text, query):
+    """Extract real numerical data from your files for visualization"""
+    import re
+    
+    viz_data = {}
+    
+    # Extract different types of data based on patterns in your files
+    
+    # Project budgets/costs (dollar amounts)
+    budget_matches = re.findall(r'budget[:\s]*\$?([\d,]+\.?\d*)', response_text, re.IGNORECASE)
+    cost_matches = re.findall(r'cost[:\s]*\$?([\d,]+\.?\d*)', response_text, re.IGNORECASE)
+    
+    # Employee efficiency scores (decimals out of 5)
+    efficiency_matches = re.findall(r'efficiency[:\s]*([\d\.]+)', response_text, re.IGNORECASE)
+    score_matches = re.findall(r'score[:\s]*([\d\.]+)', response_text, re.IGNORECASE)
+    
+    # Availability percentages
+    availability_matches = re.findall(r'availability[:\s]*([\d\.]+)%?', response_text, re.IGNORECASE)
+    percent_matches = re.findall(r'([\d\.]+)%', response_text)
+    
+    # Project benefits
+    benefit_matches = re.findall(r'benefit[:\s]*\$?([\d,]+\.?\d*)', response_text, re.IGNORECASE)
+    
+    # Convert to numbers
+    def clean_numbers(matches):
+        return [float(m.replace(',', '')) for m in matches if m]
+    
+    budgets = clean_numbers(budget_matches + cost_matches)
+    efficiencies = clean_numbers(efficiency_matches + score_matches)
+    availabilities = clean_numbers(availability_matches)
+    benefits = clean_numbers(benefit_matches)
+    percentages = clean_numbers(percent_matches)
+    
+    # Create visualizations based on what data we found
+    
+    # Budget/Cost visualization
+    if budgets and ('budget' in query.lower() or 'cost' in query.lower()):
+        if len(budgets) >= 2:
+            viz_data['budgetComparison'] = {
+                'Current Budget': budgets[0],
+                'Projected Cost': budgets[1] if len(budgets) > 1 else budgets[0] * 1.1,
+                'Benefits': benefits[0] if benefits else budgets[0] * 0.8
+            }
+    
+    # Employee efficiency scores
+    if efficiencies and ('efficiency' in query.lower() or 'score' in query.lower()):
+        viz_data['efficiencyScores'] = {}
+        for i, score in enumerate(efficiencies[:5]):  # Max 5 scores
+            viz_data['efficiencyScores'][f'Employee {i+1}'] = score
+    
+    # Availability percentages
+    if availabilities and 'availability' in query.lower():
+        viz_data['availabilityRates'] = {}
+        departments = ['IT', 'Operations', 'Finance', 'HR', 'Marketing']
+        for i, avail in enumerate(availabilities[:5]):
+            dept = departments[i] if i < len(departments) else f'Department {i+1}'
+            viz_data['availabilityRates'][dept] = avail
+    
+    # General percentage breakdown
+    if percentages and len(percentages) >= 2:
+        viz_data['percentageBreakdown'] = {}
+        categories = ['Category A', 'Category B', 'Category C', 'Category D']
+        for i, pct in enumerate(percentages[:4]):
+            cat = categories[i] if i < len(categories) else f'Category {i+1}'
+            viz_data['percentageBreakdown'][cat] = pct
+    
+    return viz_data if viz_data else None
+
+
+
 def extract_text_content(file_data, max_length=8000):
     """Extract readable text from file data with better formatting"""
     if not file_data or "content" not in file_data:
@@ -260,8 +331,9 @@ def gather_relevant_content(http_server_url, user_query, max_files=20):
         "total_files_processed": processed_count
     }
 
+
 def generate_intelligent_response(user_query, file_contents):
-    """Use Claude API to generate intelligent response based on file contents"""
+    """Use Claude API to generate intelligent response with better formatting"""
     
     if not claude_client:
         return "Claude API service not available. Please check your ANTHROPIC_API_KEY."
@@ -269,42 +341,22 @@ def generate_intelligent_response(user_query, file_contents):
     # Prepare context from file contents
     context = "=== DOCUMENT LIBRARY ===\n\n"
     
-    for i, file_info in enumerate(file_contents[:15], 1):  # Claude can handle more files
+    for i, file_info in enumerate(file_contents[:15], 1):
         context += f"DOCUMENT {i}: {file_info['file_name']}\n"
-        context += f"Type: {file_info['file_type'].upper()} ({file_info.get('mime_type', 'unknown')})\n"
-        context += f"Content:\n{file_info['content'][:4000]}\n"  # More content per file
+        context += f"Type: {file_info['file_type'].upper()}\n"
+        context += f"Content:\n{file_info['content'][:4000]}\n"
         context += "\n" + "="*60 + "\n\n"
     
-    # Enhanced prompt for Claude
-    prompt = f"""You are a professional document analyst and business intelligence assistant. You have access to a comprehensive document library containing project files, reports, spreadsheets, and other business documents.
-
-USER QUESTION: {user_query}
-
-DOCUMENT LIBRARY:
-{context}
-
-Please provide a detailed, professional response to the user's question based on the documents provided. Follow these guidelines:
-
-1. Answer the specific question directly and comprehensively
-2. Include relevant details, numbers, names, dates, and specific information from the documents
-3. Cite which documents contain the information (use document names)
-4. If the question asks for lists, provide complete, well-formatted lists
-5. For data analysis requests, include relevant statistics and insights
-6. If information spans multiple documents, synthesize it coherently
-7. Use proper business formatting (bullet points, numbered lists, sections) when appropriate
-8. If the question cannot be fully answered from the provided documents, explain what information is available and what might be missing
-9. Be thorough but concise - provide complete answers without unnecessary repetition
-
-Response:"""
+    # Use enhanced prompt
+    enhanced_prompt = enhance_claude_prompt(user_query, context)
 
     try:
-        # Call Claude API
         response = claude_client.messages.create(
-            model="claude-3-5-sonnet-20241022",  # Latest Claude model
-            max_tokens=2000,  # Claude has much higher limits
-            temperature=0.1,  # Low temperature for accuracy
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=2000,
+            temperature=0.1,
             messages=[
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": enhanced_prompt}
             ]
         )
         
@@ -313,7 +365,36 @@ Response:"""
     except Exception as e:
         print(f"Error calling Claude API: {e}")
         return f"I encountered an error while analyzing the documents: {str(e)}"
+    
 
+
+def enhance_claude_prompt(user_query, context):
+    """
+    Enhance the prompt to encourage proper formatting
+    """
+    
+    enhanced_prompt = f"""You are a professional document analyst. When presenting information, use proper formatting:
+
+- Use markdown tables for tabular data
+- Use bullet points for lists
+- Use headers (##, ###) for sections
+- Use **bold** for important information
+- Use code blocks for any technical data
+
+USER QUESTION: {user_query}
+
+DOCUMENT CONTEXT:
+{context}
+
+Please provide a well-formatted response that makes good use of tables, headers, and lists where appropriate. If you need to present data in rows and columns, always use markdown table format like:
+
+| Column 1 | Column 2 | Column 3 |
+|----------|----------|----------|
+| Data 1   | Data 2   | Data 3   |
+
+Response:"""
+
+    return enhanced_prompt
 
 @app.route("/", methods=["GET", "POST"])
 def login():
@@ -324,27 +405,69 @@ def login():
         user = users.get(username)
         if user and user.password == password:
             login_user(user)
-            return redirect(url_for("dashboard"))
+            return redirect(url_for("categories"))  # Changed from "dashboard"
         else:
             flash("Invalid username or password", "danger")
 
     return render_template("login.html")
 
-@app.route("/dashboard")
+
+@app.route("/categories")
 @login_required
-def dashboard():
-    departments = [
-        {"name": "FTB", "key": "ftb", "icon": "ftb.jpeg"},
-        {"name": "Dept of Motor Vehicles", "key": "dmv", "icon": "dmv.jpeg"},
-        {"name": "City of San Jose", "key": "sanjose", "icon": "sanjose.jpeg"},
-        {"name": "Employment Development Dept", "key": "edd", "icon": "edd.jpeg"},
-        {"name": "Fi$cal", "key": "fiscal", "icon": "fiscal.jpeg"},
-        {"name": "Rancho Cordova", "key": "ranchocordova", "icon": "ranchocordova.jpeg"},
-        {"name": "CalPERS", "key": "calpers", "icon": "calpers.jpeg"},
-        {"name": "CDFA", "key": "cdfa", "icon": "cdfa.jpeg"},
-        {"name": "Office of Energy Infrastructure", "key": "energy", "icon": "energy.jpeg"},
-    ]
-    return render_template("dashboard.html", departments=departments)
+def categories():
+    return render_template("categories.html")
+
+
+@app.route("/dashboard/<category>")
+@login_required
+def dashboard(category):
+    # Define ALL departments for each category (9 total)
+    category_departments = {
+        "public_services": [
+            {"name": "FTB", "key": "ftb", "icon": "ftb.jpeg"},
+            {"name": "Dept of Motor Vehicles", "key": "dmv", "icon": "dmv.jpeg"},
+            {"name": "City of San Jose", "key": "sanjose", "icon": "sanjose.jpeg"},
+            {"name": "Employment Development Dept", "key": "edd", "icon": "edd.jpeg"},
+            {"name": "CalPERS", "key": "calpers", "icon": "calpers.jpeg"},
+            {"name": "CDFA", "key": "cdfa", "icon": "cdfa.jpeg"},
+            {"name": "Office of Energy Infrastructure", "key": "energy", "icon": "energy.jpeg"},
+            {"name": "Fi$cal", "key": "fiscal", "icon": "fiscal.jpeg"},
+            {"name": "Rancho Cordova", "key": "ranchocordova", "icon": "ranchocordova.jpeg"},
+        ],
+        "energy": [
+            {"name": "FTB", "key": "ftb", "icon": "ftb.jpeg"},
+            {"name": "Dept of Motor Vehicles", "key": "dmv", "icon": "dmv.jpeg"},
+            {"name": "City of San Jose", "key": "sanjose", "icon": "sanjose.jpeg"},
+            {"name": "Employment Development Dept", "key": "edd", "icon": "edd.jpeg"},
+            {"name": "CalPERS", "key": "calpers", "icon": "calpers.jpeg"},
+            {"name": "CDFA", "key": "cdfa", "icon": "cdfa.jpeg"},
+            {"name": "Office of Energy Infrastructure", "key": "energy", "icon": "energy.jpeg"},
+            {"name": "Fi$cal", "key": "fiscal", "icon": "fiscal.jpeg"},
+            {"name": "Rancho Cordova", "key": "ranchocordova", "icon": "ranchocordova.jpeg"},
+        ],
+        "health": [
+            {"name": "FTB", "key": "ftb", "icon": "ftb.jpeg"},
+            {"name": "Dept of Motor Vehicles", "key": "dmv", "icon": "dmv.jpeg"},
+            {"name": "City of San Jose", "key": "sanjose", "icon": "sanjose.jpeg"},
+            {"name": "Employment Development Dept", "key": "edd", "icon": "edd.jpeg"},
+            {"name": "CalPERS", "key": "calpers", "icon": "calpers.jpeg"},
+            {"name": "CDFA", "key": "cdfa", "icon": "cdfa.jpeg"},
+            {"name": "Office of Energy Infrastructure", "key": "energy", "icon": "energy.jpeg"},
+            {"name": "Fi$cal", "key": "fiscal", "icon": "fiscal.jpeg"},
+            {"name": "Rancho Cordova", "key": "ranchocordova", "icon": "ranchocordova.jpeg"},
+        ]
+    }
+    
+    departments = category_departments.get(category, [])
+    category_names = {
+        "public_services": "Public Services",
+        "energy": "Energy", 
+        "health": "Health"
+    }
+    
+    return render_template("dashboard.html", 
+                         departments=departments, 
+                         category_name=category_names.get(category, "Unknown"))
 
 @app.route("/ftb")
 @login_required
@@ -378,12 +501,20 @@ def qa_page():
 from claude_processor import ClaudeLikeDocumentProcessor
 
 # Global processor instance to maintain session across requests
+# Replace your existing qa_endpoint in app.py with this integrated version:
+
+from claude_processor import ClaudeLikeDocumentProcessor
+from visual_analyst import VisualizationAnalyst
+
+# Global instances to maintain session
 document_processor = None
+visualization_analyst = None
+# Replace your qa_endpoint with this debug version to identify the exact issue:
 
 @app.route("/qa_api", methods=["POST"])
 @login_required
 def qa_endpoint():
-    global document_processor
+    global document_processor, visualization_analyst
     
     try:
         query = request.json.get("query")
@@ -391,37 +522,227 @@ def qa_endpoint():
         if not query or not query.strip():
             return jsonify({"answer": "Please provide a valid question."})
         
-        print(f"\n=== ITERATIVE CLAUDE-LIKE PROCESSING ===")
+        print(f"\n=== DEBUG QA ENDPOINT ===")
         print(f"User query: '{query}'")
         
-        http_server_url = "http://localhost:8000"
+        http_server_url = "http://54.172.238.47:8000"
         
         if not claude_client:
+            print("ERROR: Claude client not available")
             return jsonify({"answer": "Claude API service not available."})
         
-        # Initialize processor if not exists (maintains session)
+        # Initialize processors
         if document_processor is None:
-            document_processor = ClaudeLikeDocumentProcessor(http_server_url, claude_client)
-            print("New session started")
+            try:
+                document_processor = ClaudeLikeDocumentProcessor(http_server_url, claude_client)
+                print("✓ Document processor initialized")
+            except Exception as e:
+                print(f"ERROR initializing document processor: {e}")
+                return jsonify({"answer": f"Document processor error: {str(e)}"})
+        
+        if visualization_analyst is None:
+            try:
+                visualization_analyst = VisualizationAnalyst(claude_client)
+                print("✓ Visualization analyst initialized")
+            except Exception as e:
+                print(f"ERROR initializing visualization analyst: {e}")
+                # Continue without visualization analyst
+                visualization_analyst = None
+        
+        # Process query
+        try:
+            print("🔄 Processing query with document processor...")
+            response = document_processor.process_query_iteratively(query)
+            print(f"✓ Got response ({len(response)} chars)")
+        except Exception as e:
+            print(f"ERROR in document processing: {e}")
+            return jsonify({"answer": f"Document processing error: {str(e)}"})
+        
+        # Clean response
+        cleaned_response = clean_response_text(response)
+        print(f"✓ Cleaned response ({len(cleaned_response)} chars)")
+        
+        # Check for visualization triggers
+        viz_keywords = ['visual', 'chart', 'graph', 'show', 'display', 'forecast', 'visualize']
+        data_keywords = ['cost', 'budget', 'data', 'number', 'amount', 'efficiency', 'project', 'breakdown']
+        
+        has_viz_keyword = any(keyword in query.lower() for keyword in viz_keywords)
+        has_data_keyword = any(keyword in query.lower() for keyword in data_keywords)
+        has_numerical_data = _response_contains_numerical_data(cleaned_response)
+        
+        print(f"Visualization triggers:")
+        print(f"  - Has viz keyword: {has_viz_keyword}")
+        print(f"  - Has data keyword: {has_data_keyword}")
+        print(f"  - Has numerical data: {has_numerical_data}")
+        
+        viz_data = None
+        if (has_viz_keyword or has_data_keyword or has_numerical_data) and visualization_analyst:
+            print("🎯 Attempting visualization generation...")
+            try:
+                viz_data = visualization_analyst.analyze_and_visualize(
+                    response_text=cleaned_response,
+                    user_query=query, 
+                    session_context=document_processor.session_context
+                )
+                if viz_data:
+                    print(f"✓ Visualization generated: {len(viz_data.get('visualizations', []))} charts")
+                    print(f"  Chart types: {[v.get('type') for v in viz_data.get('visualizations', [])]}")
+                else:
+                    print("⚠️ No visualization data returned")
+            except Exception as e:
+                print(f"ERROR in visualization generation: {e}")
+                import traceback
+                traceback.print_exc()
+                viz_data = None
         else:
-            print(f"Continuing session - {len(document_processor.session_context['files_mentioned'])} files in context")
+            print("➤ Skipping visualization (no triggers or analyst unavailable)")
         
-        # Process query iteratively with session memory
-        response = document_processor.process_query_iteratively(query)
+        # Return response
+        response_data = {
+            "answer": cleaned_response,
+            "visualization": viz_data,
+            "has_visualization": viz_data is not None,
+            "debug_info": {
+                "has_viz_keyword": has_viz_keyword,
+                "has_data_keyword": has_data_keyword,
+                "has_numerical_data": has_numerical_data,
+                "visualization_analyst_available": visualization_analyst is not None,
+                "viz_charts_generated": len(viz_data.get('visualizations', [])) if viz_data else 0
+            }
+        }
         
-        return jsonify({"answer": response})
+        print(f"📤 Returning response: has_visualization={viz_data is not None}")
+        return jsonify(response_data)
     
     except Exception as e:
-        print(f"Error in iterative processing: {e}")
+        print(f"CRITICAL ERROR in qa_endpoint: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"answer": f"System error: {str(e)}"})
 
-# Add endpoint to clear session
-@app.route("/clear_session", methods=["POST"])
-@login_required  
-def clear_session():
-    global document_processor
-    document_processor = None
-    return jsonify({"status": "Session cleared successfully"})
+def _response_contains_numerical_data(response_text):
+    """Check if response contains numerical data worth visualizing"""
+    import re
+    
+    patterns = [
+        r'\$[\d,]+',  # Dollar amounts
+        r'\d+%',      # Percentages  
+        r'\d+\.\d+',  # Decimal numbers
+        r':\s*\d+',   # Colon followed by numbers
+        r'\d+\s*(hours|days|weeks|months)',  # Time periods
+        r'\d+\s*(employees|projects|incidents)',  # Counts
+    ]
+    
+    count = 0
+    for pattern in patterns:
+        matches = re.findall(pattern, response_text)
+        count += len(matches)
+        if count >= 2:
+            print(f"Found numerical data: {matches[:3]}...")
+            return True
+    
+    print(f"Found {count} numerical patterns (need 2+)")
+    return False
+
+
+def clean_response_text(text):
+    """Remove JavaScript code and function definitions from response"""
+    import re
+    
+    # Remove function definitions
+    text = re.sub(r'function\s+\w+\s*\([^)]*\)\s*\{[\s\S]*?\}', '', text)
+    # Remove variable assignments with functions
+    text = re.sub(r'(const|let|var)\s+\w+\s*=\s*function[\s\S]*?\};?', '', text)
+    # Remove object method definitions
+    text = re.sub(r'\w+\s*:\s*function\s*\([^)]*\)\s*\{[\s\S]*?\}', '', text)
+    # Remove DOM manipulation
+    text = re.sub(r'document\.createElement[\s\S]*?;', '', text)
+    text = re.sub(r'\w+\.innerHTML\s*=[\s\S]*?;', '', text)
+    text = re.sub(r'\w+\.appendChild[\s\S]*?;', '', text)
+    # Remove chart creation calls
+    text = re.sub(r'createChart\([^)]*\);?', '', text)
+    # Remove visualization titles that appear as text
+    text = re.sub(r'Budget Analysis|Efficiency Scores|Availability Rates', '', text)
+    # Clean up extra whitespace
+    text = re.sub(r'\s+', ' ', text).strip()
+    
+    return text
+
+
+def extract_viz_data_from_response(response_text, query):
+    """Extract real numerical data from your files for visualization"""
+    import re
+    
+    viz_data = {}
+    
+    # Extract different types of data based on patterns in your files
+    
+    # Project budgets/costs (dollar amounts)
+    budget_matches = re.findall(r'budget[:\s]*\$?([\d,]+\.?\d*)', response_text, re.IGNORECASE)
+    cost_matches = re.findall(r'cost[:\s]*\$?([\d,]+\.?\d*)', response_text, re.IGNORECASE)
+    
+    # Employee efficiency scores (decimals out of 5)
+    efficiency_matches = re.findall(r'efficiency[:\s]*([\d\.]+)', response_text, re.IGNORECASE)
+    score_matches = re.findall(r'score[:\s]*([\d\.]+)', response_text, re.IGNORECASE)
+    
+    # Availability percentages
+    availability_matches = re.findall(r'availability[:\s]*([\d\.]+)%?', response_text, re.IGNORECASE)
+    percent_matches = re.findall(r'([\d\.]+)%', response_text)
+    
+    # Project benefits
+    benefit_matches = re.findall(r'benefit[:\s]*\$?([\d,]+\.?\d*)', response_text, re.IGNORECASE)
+    
+    # Convert to numbers
+    def clean_numbers(matches):
+        return [float(m.replace(',', '')) for m in matches if m]
+    
+    budgets = clean_numbers(budget_matches + cost_matches)
+    efficiencies = clean_numbers(efficiency_matches + score_matches)
+    availabilities = clean_numbers(availability_matches)
+    benefits = clean_numbers(benefit_matches)
+    percentages = clean_numbers(percent_matches)
+    
+    # Create visualizations based on what data we found
+    
+    # Budget/Cost visualization
+    if budgets and ('budget' in query.lower() or 'cost' in query.lower()):
+        if len(budgets) >= 2:
+            viz_data['budgetComparison'] = {
+                'Current Budget': budgets[0],
+                'Projected Cost': budgets[1] if len(budgets) > 1 else budgets[0] * 1.1,
+                'Benefits': benefits[0] if benefits else budgets[0] * 0.8
+            }
+        elif len(budgets) == 1:
+            viz_data['budgetComparison'] = {
+                'Project Budget': budgets[0],
+                'Estimated Benefits': benefits[0] if benefits else budgets[0] * 0.75
+            }
+    
+    # Employee efficiency scores
+    if efficiencies and ('efficiency' in query.lower() or 'score' in query.lower()):
+        viz_data['efficiencyScores'] = {}
+        for i, score in enumerate(efficiencies[:5]):  # Max 5 scores
+            viz_data['efficiencyScores'][f'Employee {i+1}'] = min(score, 5.0)  # Cap at 5
+    
+    # Availability percentages
+    if availabilities and 'availability' in query.lower():
+        viz_data['availabilityRates'] = {}
+        departments = ['IT', 'Operations', 'Finance', 'HR', 'Marketing']
+        for i, avail in enumerate(availabilities[:5]):
+            dept = departments[i] if i < len(departments) else f'Department {i+1}'
+            viz_data['availabilityRates'][dept] = min(avail, 100)  # Cap at 100%
+    
+    # General percentage breakdown
+    if percentages and len(percentages) >= 2:
+        viz_data['percentageBreakdown'] = {}
+        categories = ['Category A', 'Category B', 'Category C', 'Category D']
+        for i, pct in enumerate(percentages[:4]):
+            cat = categories[i] if i < len(categories) else f'Category {i+1}'
+            viz_data['percentageBreakdown'][cat] = min(pct, 100)
+    
+    return viz_data if viz_data else None
+
+
 
 # Add endpoint to view session context
 @app.route("/session_context", methods=["GET"])
@@ -543,6 +864,103 @@ def debug():
     <p>Cached folders: {len(folder_structure_cache)}</p>
     <p>HTTP Server Status: <a href="http://localhost:8000/health">Check Health</a></p>
     """
+# Add this test route to your app.py to verify integration:
+
+@app.route("/test_viz", methods=["GET"])
+@login_required
+def test_visualization():
+    """Test visualization generation with mock data"""
+    
+    # Test data that should definitely trigger visualization
+    mock_response = """
+    Project Alpha Budget Analysis:
+    
+    Project Alpha: $150,000
+    Project Beta: $200,000
+    Project Gamma: $175,000
+    
+    Department Efficiency Scores:
+    IT Department: 4.2
+    Finance Team: 3.8
+    Operations: 4.5
+    Marketing: 3.9
+    
+    Budget Breakdown:
+    Personnel: $85,000
+    Technology: $45,000
+    Infrastructure: $30,000
+    Training: $15,000
+    """
+    
+    test_query = "Show me project costs and efficiency data"
+    
+    try:
+        # Test VisualizationAnalyst directly
+        if claude_client:
+            from visual_analyst import VisualizationAnalyst
+            analyst = VisualizationAnalyst(claude_client)
+            
+            viz_result = analyst.analyze_and_visualize(
+                response_text=mock_response,
+                user_query=test_query,
+                session_context={}
+            )
+            
+            return jsonify({
+                "status": "success",
+                "mock_response_length": len(mock_response),
+                "visualization_generated": viz_result is not None,
+                "visualization_data": viz_result,
+                "charts_count": len(viz_result.get('visualizations', [])) if viz_result else 0,
+                "test_query": test_query
+            })
+        else:
+            return jsonify({
+                "status": "error",
+                "message": "Claude client not available"
+            })
+            
+    except Exception as e:
+        import traceback
+        return jsonify({
+            "status": "error",
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        })
+
+# Also add this simple test to ensure your imports work:
+@app.route("/test_imports", methods=["GET"])
+@login_required
+def test_imports():
+    """Test that all required modules can be imported"""
+    
+    results = {}
+    
+    try:
+        from claude_processor import ClaudeLikeDocumentProcessor
+        results["claude_processor"] = "✓ Imported successfully"
+    except Exception as e:
+        results["claude_processor"] = f"✗ Import failed: {str(e)}"
+    
+    try:
+        from visual_analyst import VisualizationAnalyst
+        results["visual_analyst"] = "✓ Imported successfully"
+    except Exception as e:
+        results["visual_analyst"] = f"✗ Import failed: {str(e)}"
+    
+    try:
+        import anthropic
+        results["anthropic"] = "✓ Imported successfully"
+        results["claude_client_status"] = "✓ Available" if claude_client else "✗ Not initialized"
+    except Exception as e:
+        results["anthropic"] = f"✗ Import failed: {str(e)}"
+    
+    return jsonify({
+        "import_results": results,
+        "claude_api_key_set": bool(os.getenv("ANTHROPIC_API_KEY")),
+        "python_path": sys.path
+    })
+
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True,host="0.0.0.0",port=5000)

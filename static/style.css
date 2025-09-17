@@ -1,3 +1,12 @@
+body, html {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
+.container, .main-container {
+    max-width: 100%;
+    overflow-x: hidden;
+}
 /* Navbar styling */
 .navbar-brand {
     font-size: 1.1rem;
@@ -125,7 +134,7 @@ border: 2px solid #c0e6d0 !important; /* Thicker border, same light color */
 .module-name {
     font-weight: 600;
     color: #2504c9 !important; /* Dark blue color */
-    font-size: 0.9rem;
+    /*font-size: 0.9rem;*/
 }
 
 .light-border {
