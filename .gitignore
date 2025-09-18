@@ -34,6 +34,7 @@ ENV/
 .venv
 credentials.json
 token.json
+service_account.json
 
 
 # IDE

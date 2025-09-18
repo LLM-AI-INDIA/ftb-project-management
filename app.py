@@ -7,9 +7,131 @@ import requests
 import json
 import anthropic
 from typing import List, Dict, Any
+from claude_processor import ClaudeLikeDocumentProcessor
+from visual_analyst import VisualizationAnalyst
+from mcp_logic import generate_table_description,detect_visualization_intent,discover_tools,parse_user_query,call_tool_with_sql,generate_llm_response,generate_visualization,call_mcp_tool
 
 
 load_dotenv()
+
+
+class ProjectDocumentProcessor(ClaudeLikeDocumentProcessor):
+    def __init__(self, http_server_url, claude_client):
+        super().__init__(http_server_url, claude_client)
+        # You'll need to find your actual project management folder ID from Google Drive
+        self.project_folder_id = "1_RuIezT1KN8miQ_3_167rkCXP9ZoZq35"
+        
+    def _search_files(self, args):
+        """Override to search with project-specific terms"""
+        query = args.get("query", "")
+        max_results = args.get("max_results", 20)
+        
+        # Try project-specific search terms
+        project_queries = []
+        if query:
+            project_queries = [
+                f"{query} project",
+                f"{query} management", 
+                f"project {query}",
+                query  # Original query as fallback
+            ]
+        else:
+            project_queries = ["project", "plan", "milestone", "timeline"]
+        
+        all_files = []
+        seen_ids = set()
+        
+        for search_query in project_queries:
+            response = requests.post(f"{self.http_server_url}/call_tool", json={
+                "name": "search_gdrive_files",
+                "arguments": {
+                    "query": search_query,
+                    "max_results": max_results
+                }
+            })
+            
+            if response.status_code == 200:
+                result = response.json()
+                if result.get("success"):
+                    files_found = result.get("data", [])
+                    # Filter for project-related files and avoid duplicates
+                    for f in files_found:
+                        if f["id"] not in seen_ids:
+                            file_name_lower = f.get('name', '').lower()
+                            # Check if file is project-related
+                            if any(keyword in file_name_lower 
+                                 for keyword in ['project', 'plan', 'milestone', 'timeline', 'budget', 
+                                               'resource', 'task', 'deliverable', 'roadmap']):
+                                all_files.append(f)
+                                seen_ids.add(f["id"])
+            
+            # Stop if we have enough files
+            if len(all_files) >= max_results:
+                break
+        
+        return {
+            "success": True,
+            "files": [
+                {
+                    "id": f["id"],
+                    "name": f["name"],
+                    "type": f.get("mimeType", "unknown"),
+                    "size": f.get("size", "unknown"),
+                    "modified": f.get("modifiedTime", "unknown")
+                }
+                for f in all_files[:max_results]
+            ],
+            "total_found": len(all_files),
+            "search_location": "project_management_files"
+        }
+
+
+# Operations-specific document processor class
+class OperationsDocumentProcessor(ClaudeLikeDocumentProcessor):
+    def __init__(self, http_server_url, claude_client):
+        super().__init__(http_server_url, claude_client)
+        self.operations_folder_id = "116wKTVLaOkK6QRyozG6cx9SBloxUWTro"
+        
+    def _search_files(self, args):
+        """Override to search only in operations folder"""
+        query = args.get("query", "")
+        max_results = args.get("max_results", 20)
+        
+        response = requests.post(f"{self.http_server_url}/call_tool", json={
+            "name": "search_gdrive_files",
+            "arguments": {
+                "query": f"{query} operations",
+                "max_results": max_results
+            }
+        })
+        
+        if response.status_code == 200:
+            result = response.json()
+            if result.get("success"):
+                files_found = result.get("data", [])
+                operations_files = [f for f in files_found 
+                                  if 'operations' in f.get('name', '').lower() 
+                                  or 'operational' in f.get('name', '').lower()]
+                
+                return {
+                    "success": True,
+                    "files": [
+                        {
+                            "id": f["id"],
+                            "name": f["name"],
+                            "type": f.get("mimeType", "unknown"),
+                            "size": f.get("size", "unknown"),
+                            "modified": f.get("modifiedTime", "unknown")
+                        }
+                        for f in operations_files
+                    ],
+                    "total_found": len(operations_files),
+                    "search_location": "operations_folder"
+                }
+        
+        return {"success": False, "error": "Failed to search operations folder"}
+
+
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
@@ -17,6 +139,7 @@ app.secret_key = "supersecretkey"
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
+
 
 # Initialize Anthropic client
 try:
@@ -281,56 +404,6 @@ def extract_text_content(file_data, max_length=8000):
     
     return text
 
-def gather_relevant_content(http_server_url, user_query, max_files=20):
-    """Gather content from files with comprehensive search"""
-    
-    print(f"Gathering content for query: '{user_query}'")
-    
-    # Get comprehensive file list
-    all_files = get_comprehensive_file_list(http_server_url)
-    
-    if not all_files:
-        return {"success": False, "error": "No files found in Google Drive"}
-    
-    print(f"Processing up to {min(len(all_files), max_files)} files")
-    
-    # Collect content from files
-    file_contents = []
-    processed_count = 0
-    
-    for file_info in all_files[:max_files]:  # Limit processing for performance
-        file_id = file_info["id"]
-        file_name = file_info["name"]
-        file_type = file_info.get("mimeType", "unknown")
-        
-        print(f"Processing: {file_name} ({file_type})")
-        
-        # Read file content
-        file_data = read_file_content(http_server_url, file_id, file_name)
-        
-        if not file_data:
-            continue
-        
-        # Extract text content
-        text_content = extract_text_content(file_data)
-        
-        if text_content.strip():
-            file_contents.append({
-                "file_name": file_name,
-                "content": text_content,
-                "file_type": file_data.get("content", {}).get("type", "unknown"),
-                "mime_type": file_type,
-                "file_id": file_id
-            })
-            processed_count += 1
-    
-    return {
-        "success": True,
-        "file_contents": file_contents,
-        "total_files_available": len(all_files),
-        "total_files_processed": processed_count
-    }
-
 
 def generate_intelligent_response(user_query, file_contents):
     """Use Claude API to generate intelligent response with better formatting"""
@@ -490,31 +563,114 @@ def logout():
 def insights():
     return render_template("insights.html")
 
-@app.route("/qa_chat", methods=["GET"])
+@app.route("/insights_api", methods=["POST"])
 @login_required
-def qa_page():
-    return render_template("qa_chat.html")
+def insights_api():
+    try:
+        query = request.json.get("query")
+        if not query:
+            return jsonify({"answer": "Please enter a valid query."})
+        
+        mcp_server_url = os.environ.get("MCP_SERVER_URL", "http://localhost:8080")
+        
+        # Discover tools and parse query (keep existing code...)
+        available_tools = discover_tools(mcp_server_url)
+        if not available_tools:
+            available_tools = {
+                "Bigquery_Customer": "Customer data queries",
+                "Cloud_SQL_Product": "Product catalog queries", 
+                "SAP_Hana_Sales": "Sales transaction queries",
+                "Oracle_CustomerFeedback": "Customer feedback queries",
+                "amazon_redshift_CustomerCallLog": "Customer service call logs"
+            }
+        
+        parsed = parse_user_query(query, available_tools)
+        if "error" in parsed:
+            return jsonify({"answer": parsed["error"]})
+        
+        tool = parsed.get("tool")
+        sql = parsed.get("sql")
+        
+        if not tool or not sql:
+            return jsonify({"answer": "Could not parse your query. Please try rephrasing."})
+        
+        # Call MCP tool
+        data = call_tool_with_sql(tool, sql, mcp_server_url)
+        
+        answer = None
+        html_table = None
+        
+        # Generate response (keep existing code for answer and html_table...)
+        if data.get("rows") and len(data["rows"]) > 0:
+            try:
+                import pandas as pd
+                df = pd.DataFrame(data["rows"])
+                answer = generate_table_description(df, data, "read", tool, query)
+                html_table = df.head(50).to_html(
+                    classes='table table-striped table-hover',
+                    table_id='data-table',
+                    escape=False,
+                    index=False,
+                    max_rows=50
+                )
+            except Exception as e:
+                print(f"Error processing DataFrame: {e}")
+                answer = f"Successfully retrieved {data.get('row_count', 0)} records from the database."
+                html_table = "<div class='alert alert-info'>Data retrieved successfully.</div>"
+        else:
+            answer = generate_llm_response(data, "read", tool, query)
+            html_table = "<div class='alert alert-warning'>No data found for your query.</div>"
+        
+        # NEW: Use the same visualization approach as project/operations
+        viz_data = None
+        if data.get("rows"):
+            try:
+                viz_data = extract_insights_viz_data(data, query, tool)
+                print(f"Viz data keys: {list(viz_data.keys()) if viz_data else 'None'}")
+            except Exception as e:
+                print(f"Error in extract_insights_viz_data: {e}")
+                import traceback
+                traceback.print_exc()
+        
+        return jsonify({
+            "answer": answer or "Query processed successfully.",
+            "html_table": html_table,
+            "visualization": viz_data,  # Now returns simple data objects like project/operations
+            "has_visualization": viz_data is not None
+        })
+        
+    except Exception as e:
+        print(f"Error in insights_api: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"answer": f"System error: {str(e)}"})
 
 
 
-# Replace your qa_endpoint with this debug version to identify the issue
-from claude_processor import ClaudeLikeDocumentProcessor
 
-# Global processor instance to maintain session across requests
-# Replace your existing qa_endpoint in app.py with this integrated version:
 
-from claude_processor import ClaudeLikeDocumentProcessor
-from visual_analyst import VisualizationAnalyst
+project_processor = None
+operations_processor = None
 
-# Global instances to maintain session
-document_processor = None
-visualization_analyst = None
-# Replace your qa_endpoint with this debug version to identify the exact issue:
+
+@app.route("/qa_projects")
+@login_required
+def qa_projects():
+    """Project Management QA Chat"""
+    return render_template("qa_chat_projects.html")
+
+@app.route("/qa_operations")
+@login_required
+def qa_operations():
+    """Operations QA Chat"""
+    return render_template("qa_chat_operations.html")
+
 
 @app.route("/qa_api", methods=["POST"])
 @login_required
-def qa_endpoint():
-    global document_processor, visualization_analyst
+def qa_api():
+    """Handle QA requests for project management using ClaudeDocumentProcessor"""
+    global project_processor
     
     try:
         query = request.json.get("query")
@@ -522,103 +678,231 @@ def qa_endpoint():
         if not query or not query.strip():
             return jsonify({"answer": "Please provide a valid question."})
         
-        print(f"\n=== DEBUG QA ENDPOINT ===")
+        print(f"\n=== PROJECT MANAGEMENT QA ENDPOINT (CLAUDE PROCESSOR) ===")
         print(f"User query: '{query}'")
         
-        http_server_url = "http://54.172.238.47:8000"
+        http_server_url = "http://0.0.0.0:8000"
         
         if not claude_client:
-            print("ERROR: Claude client not available")
             return jsonify({"answer": "Claude API service not available."})
         
-        # Initialize processors
-        if document_processor is None:
-            try:
-                document_processor = ClaudeLikeDocumentProcessor(http_server_url, claude_client)
-                print("✓ Document processor initialized")
-            except Exception as e:
-                print(f"ERROR initializing document processor: {e}")
-                return jsonify({"answer": f"Document processor error: {str(e)}"})
-        
-        if visualization_analyst is None:
-            try:
-                visualization_analyst = VisualizationAnalyst(claude_client)
-                print("✓ Visualization analyst initialized")
-            except Exception as e:
-                print(f"ERROR initializing visualization analyst: {e}")
-                # Continue without visualization analyst
-                visualization_analyst = None
-        
-        # Process query
-        try:
-            print("🔄 Processing query with document processor...")
-            response = document_processor.process_query_iteratively(query)
-            print(f"✓ Got response ({len(response)} chars)")
-        except Exception as e:
-            print(f"ERROR in document processing: {e}")
-            return jsonify({"answer": f"Document processing error: {str(e)}"})
-        
-        # Clean response
-        cleaned_response = clean_response_text(response)
-        print(f"✓ Cleaned response ({len(cleaned_response)} chars)")
-        
-        # Check for visualization triggers
-        viz_keywords = ['visual', 'chart', 'graph', 'show', 'display', 'forecast', 'visualize']
-        data_keywords = ['cost', 'budget', 'data', 'number', 'amount', 'efficiency', 'project', 'breakdown']
-        
-        has_viz_keyword = any(keyword in query.lower() for keyword in viz_keywords)
-        has_data_keyword = any(keyword in query.lower() for keyword in data_keywords)
-        has_numerical_data = _response_contains_numerical_data(cleaned_response)
-        
-        print(f"Visualization triggers:")
-        print(f"  - Has viz keyword: {has_viz_keyword}")
-        print(f"  - Has data keyword: {has_data_keyword}")
-        print(f"  - Has numerical data: {has_numerical_data}")
-        
-        viz_data = None
-        if (has_viz_keyword or has_data_keyword or has_numerical_data) and visualization_analyst:
-            print("🎯 Attempting visualization generation...")
-            try:
-                viz_data = visualization_analyst.analyze_and_visualize(
-                    response_text=cleaned_response,
-                    user_query=query, 
-                    session_context=document_processor.session_context
-                )
-                if viz_data:
-                    print(f"✓ Visualization generated: {len(viz_data.get('visualizations', []))} charts")
-                    print(f"  Chart types: {[v.get('type') for v in viz_data.get('visualizations', [])]}")
-                else:
-                    print("⚠️ No visualization data returned")
-            except Exception as e:
-                print(f"ERROR in visualization generation: {e}")
-                import traceback
-                traceback.print_exc()
-                viz_data = None
+        # Initialize project processor if not exists - but use the ORIGINAL ClaudeDocumentProcessor
+        if project_processor is None:
+            from claude_processor import ClaudeLikeDocumentProcessor
+            project_processor = ClaudeLikeDocumentProcessor(http_server_url, claude_client)
+            print("New project management session started with ClaudeDocumentProcessor")
         else:
-            print("➤ Skipping visualization (no triggers or analyst unavailable)")
+            print(f"Continuing project session - {len(project_processor.session_context['files_mentioned'])} files in context")
         
-        # Return response
-        response_data = {
-            "answer": cleaned_response,
+        # Process query iteratively using the original ClaudeDocumentProcessor
+        print("Processing query with ClaudeDocumentProcessor...")
+        response = project_processor.process_query_iteratively(query)
+        
+        # Extract visualization data from the response
+        viz_data = extract_viz_data_from_response(response, query)
+        
+        if viz_data:
+            print(f"Found visualization data: {list(viz_data.keys())}")
+        else:
+            print("No visualization data found")
+        
+        return jsonify({
+            "answer": response,  # Full detailed response from ClaudeDocumentProcessor
             "visualization": viz_data,
             "has_visualization": viz_data is not None,
-            "debug_info": {
-                "has_viz_keyword": has_viz_keyword,
-                "has_data_keyword": has_data_keyword,
-                "has_numerical_data": has_numerical_data,
-                "visualization_analyst_available": visualization_analyst is not None,
-                "viz_charts_generated": len(viz_data.get('visualizations', [])) if viz_data else 0
-            }
-        }
+            "source": "claude_document_processor"
+        })
         
-        print(f"📤 Returning response: has_visualization={viz_data is not None}")
-        return jsonify(response_data)
-    
     except Exception as e:
-        print(f"CRITICAL ERROR in qa_endpoint: {e}")
+        print(f"Error in project management processing: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({"answer": f"System error: {str(e)}"})
+
+
+@app.route("/qa_operations_api", methods=["POST"])
+@login_required
+def qa_operations_endpoint():
+    """API endpoint for operations QA with operations-specific search"""
+    global operations_processor
+    
+    try:
+        query = request.json.get("query")
+        
+        if not query or not query.strip():
+            return jsonify({"answer": "Please provide a valid question."})
+        
+        print(f"\n=== OPERATIONS QA ENDPOINT ===")
+        print(f"User query: '{query}'")
+        
+        http_server_url = "http://0.0.0.0:8000"
+        
+        if not claude_client:
+            return jsonify({"answer": "Claude API service not available."})
+        
+        # Initialize operations processor if not exists
+        if operations_processor is None:
+            operations_processor = OperationsDocumentProcessor(http_server_url, claude_client)
+            print("New operations session started")
+        else:
+            print(f"Continuing operations session - {len(operations_processor.session_context['files_mentioned'])} files in context")
+        
+        # Process query iteratively using operations-specific processor
+        response = operations_processor.process_query_iteratively(query)
+        
+        # Only attempt to extract REAL data from the response - no fallbacks
+        print("Attempting to extract visualization data from actual response...")
+        viz_data = extract_viz_data_from_response(response, query)
+        
+        if viz_data:
+            print(f"Found real data for visualization: {list(viz_data.keys())}")
+        else:
+            print("No real data found for visualization")
+        
+        return jsonify({
+            "answer": response,
+            "visualization": viz_data,
+            "has_visualization": viz_data is not None,
+            "source": "operations"
+        })
+        
+    except Exception as e:
+        print(f"Error in operations processing: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"answer": f"System error: {str(e)}"})
+
+
+
+def extract_insights_viz_data(data, query, tool):
+    """Extract visualization data from MCP response data"""
+    if not data.get("rows") or len(data["rows"]) == 0:
+        return None
+    
+    import pandas as pd
+    df = pd.DataFrame(data["rows"])
+    viz_data = {}
+    
+    # Car data specific visualizations
+    if 'CarData' in tool and 'Selling_Price' in df.columns:
+        # Top 10 cars by price
+        if 'Car_Name' in df.columns:
+            top_cars = df.nlargest(10, 'Selling_Price')
+            viz_data['topCarPrices'] = top_cars.set_index('Car_Name')['Selling_Price'].to_dict()
+        
+        # Fuel type distribution (if available)
+        if 'Fuel_Type' in df.columns:
+            fuel_counts = df['Fuel_Type'].value_counts().head(5)
+            viz_data['fuelTypeDistribution'] = fuel_counts.to_dict()
+            
+        # Year distribution
+        if 'Year' in df.columns:
+            df['Year_Only'] = pd.to_datetime(df['Year']).dt.year
+            year_counts = df['Year_Only'].value_counts().head(8).sort_index()
+            viz_data['yearDistribution'] = year_counts.to_dict()
+    
+    # Sales data visualizations
+    elif 'Sales' in tool:
+        if 'TotalAmount' in df.columns and 'CustomerID' in df.columns:
+            top_customers = df.groupby('CustomerID')['TotalAmount'].sum().nlargest(10)
+            viz_data['topCustomerSales'] = top_customers.to_dict()
+        
+        if 'SaleDate' in df.columns and 'TotalAmount' in df.columns:
+            df['SaleDate'] = pd.to_datetime(df['SaleDate'])
+            monthly_sales = df.groupby(df['SaleDate'].dt.to_period('M'))['TotalAmount'].sum()
+            viz_data['monthlySales'] = {str(k): v for k, v in monthly_sales.to_dict().items()}
+    
+    # Customer data visualizations
+    elif 'Customer' in tool:
+        if 'JoinDate' in df.columns:
+            df['JoinDate'] = pd.to_datetime(df['JoinDate'])
+            monthly_joins = df.groupby(df['JoinDate'].dt.to_period('M')).size()
+            viz_data['customerGrowth'] = {str(k): v for k, v in monthly_joins.to_dict().items()}
+    
+    # Product data visualizations
+    elif 'Product' in tool:
+        if 'Category' in df.columns:
+            category_counts = df['Category'].value_counts().head(8)
+            viz_data['productCategories'] = category_counts.to_dict()
+        
+        if 'Price' in df.columns and 'ProductName' in df.columns:
+            top_priced = df.nlargest(10, 'Price')
+            viz_data['topProductPrices'] = top_priced.set_index('ProductName')['Price'].to_dict()
+    
+    # Feedback data visualizations  
+    elif 'Feedback' in tool:
+        if 'Score' in df.columns:
+            score_dist = df['Score'].value_counts()
+            viz_data['feedbackScores'] = score_dist.to_dict()
+    
+    # Generic numeric column visualization
+    else:
+        # Find numeric columns for generic visualization
+        numeric_cols = df.select_dtypes(include=['number']).columns
+        if len(numeric_cols) > 0:
+            first_numeric = numeric_cols[0]
+            if len(df) <= 20:  # Small dataset
+                if len(df.columns) > 1:
+                    label_col = df.columns[0] if df.columns[0] != first_numeric else df.columns[1]
+                    viz_data['genericData'] = df.head(10).set_index(label_col)[first_numeric].to_dict()
+            else:  # Larger dataset - show aggregation
+                viz_data['dataOverview'] = {
+                    'Total Records': len(df),
+                    'Numeric Columns': len(numeric_cols),
+                    'Text Columns': len(df.columns) - len(numeric_cols)
+                }
+    
+    return viz_data if viz_data else None
+
+
+# Keep only the real data extraction function - remove the fallback functions
+def extract_viz_data_from_response(response_text, query):
+    """Extract ONLY real numerical data from the response - no fallbacks"""
+    import re
+    
+    viz_data = {}
+    
+    # Extract different types of data based on patterns in your actual files
+    patterns = {
+        # Project costs with names: "Project Alpha: $150,000"
+        'project_costs': r'(?:project|initiative)\s+([^:\n]+):\s*\$?([\d,]+\.?\d*)',
+        
+        # Budget categories: "Personnel: $45,000"
+        'budget_items': r'([A-Za-z\s]+(?:budget|cost|expense|personnel|technology|infrastructure|training)?):\s*\$?([\d,]+\.?\d*)',
+        
+        # Efficiency scores: "Team A efficiency: 4.2/5"
+        'efficiency_scores': r'([^:\n]+)\s+(?:efficiency|score|rating|performance):\s*([\d\.]+)(?:/5)?',
+        
+        # Percentages: "Availability: 95.5%"
+        'percentages': r'([^:\n]+):\s*([\d\.]+)%',
+        
+        # Time periods: "Q1 2024: $100,000"
+        'temporal_data': r'(Q[1-4]\s*20\d{2}|20\d{2}[\-\s]Q[1-4]|[A-Z][a-z]+\s*20\d{2}):\s*\$?([\d,]+\.?\d*)',
+    }
+    
+    for pattern_name, pattern in patterns.items():
+        matches = re.findall(pattern, response_text, re.IGNORECASE)
+        if matches:
+            processed_data = {}
+            for match in matches:
+                try:
+                    if len(match) >= 2:
+                        name = match[0].strip()
+                        value_str = match[1].replace(',', '')
+                        if value_str and name and len(name) > 2:  # More strict filtering
+                            value = float(value_str)
+                            if value > 0:
+                                processed_data[name] = value
+                except (ValueError, IndexError):
+                    continue
+            
+            # Only include if we have at least 2 meaningful data points
+            if processed_data and len(processed_data) >= 2:
+                viz_data[pattern_name] = processed_data
+                print(f"Found {pattern_name}: {processed_data}")
+    
+    return viz_data if viz_data else None
+
 
 def _response_contains_numerical_data(response_text):
     """Check if response contains numerical data worth visualizing"""
@@ -669,81 +953,6 @@ def clean_response_text(text):
     return text
 
 
-def extract_viz_data_from_response(response_text, query):
-    """Extract real numerical data from your files for visualization"""
-    import re
-    
-    viz_data = {}
-    
-    # Extract different types of data based on patterns in your files
-    
-    # Project budgets/costs (dollar amounts)
-    budget_matches = re.findall(r'budget[:\s]*\$?([\d,]+\.?\d*)', response_text, re.IGNORECASE)
-    cost_matches = re.findall(r'cost[:\s]*\$?([\d,]+\.?\d*)', response_text, re.IGNORECASE)
-    
-    # Employee efficiency scores (decimals out of 5)
-    efficiency_matches = re.findall(r'efficiency[:\s]*([\d\.]+)', response_text, re.IGNORECASE)
-    score_matches = re.findall(r'score[:\s]*([\d\.]+)', response_text, re.IGNORECASE)
-    
-    # Availability percentages
-    availability_matches = re.findall(r'availability[:\s]*([\d\.]+)%?', response_text, re.IGNORECASE)
-    percent_matches = re.findall(r'([\d\.]+)%', response_text)
-    
-    # Project benefits
-    benefit_matches = re.findall(r'benefit[:\s]*\$?([\d,]+\.?\d*)', response_text, re.IGNORECASE)
-    
-    # Convert to numbers
-    def clean_numbers(matches):
-        return [float(m.replace(',', '')) for m in matches if m]
-    
-    budgets = clean_numbers(budget_matches + cost_matches)
-    efficiencies = clean_numbers(efficiency_matches + score_matches)
-    availabilities = clean_numbers(availability_matches)
-    benefits = clean_numbers(benefit_matches)
-    percentages = clean_numbers(percent_matches)
-    
-    # Create visualizations based on what data we found
-    
-    # Budget/Cost visualization
-    if budgets and ('budget' in query.lower() or 'cost' in query.lower()):
-        if len(budgets) >= 2:
-            viz_data['budgetComparison'] = {
-                'Current Budget': budgets[0],
-                'Projected Cost': budgets[1] if len(budgets) > 1 else budgets[0] * 1.1,
-                'Benefits': benefits[0] if benefits else budgets[0] * 0.8
-            }
-        elif len(budgets) == 1:
-            viz_data['budgetComparison'] = {
-                'Project Budget': budgets[0],
-                'Estimated Benefits': benefits[0] if benefits else budgets[0] * 0.75
-            }
-    
-    # Employee efficiency scores
-    if efficiencies and ('efficiency' in query.lower() or 'score' in query.lower()):
-        viz_data['efficiencyScores'] = {}
-        for i, score in enumerate(efficiencies[:5]):  # Max 5 scores
-            viz_data['efficiencyScores'][f'Employee {i+1}'] = min(score, 5.0)  # Cap at 5
-    
-    # Availability percentages
-    if availabilities and 'availability' in query.lower():
-        viz_data['availabilityRates'] = {}
-        departments = ['IT', 'Operations', 'Finance', 'HR', 'Marketing']
-        for i, avail in enumerate(availabilities[:5]):
-            dept = departments[i] if i < len(departments) else f'Department {i+1}'
-            viz_data['availabilityRates'][dept] = min(avail, 100)  # Cap at 100%
-    
-    # General percentage breakdown
-    if percentages and len(percentages) >= 2:
-        viz_data['percentageBreakdown'] = {}
-        categories = ['Category A', 'Category B', 'Category C', 'Category D']
-        for i, pct in enumerate(percentages[:4]):
-            cat = categories[i] if i < len(categories) else f'Category {i+1}'
-            viz_data['percentageBreakdown'][cat] = min(pct, 100)
-    
-    return viz_data if viz_data else None
-
-
-
 # Add endpoint to view session context
 @app.route("/session_context", methods=["GET"])
 @login_required
@@ -779,7 +988,7 @@ def inspect_cache():
 @app.route("/test_discovery")
 @login_required 
 def test_discovery():
-    http_server_url = "http://54.172.238.47:8000"
+    http_server_url = "http://0.0.0.0:8000"
     
     try:
         response = requests.post(f"{http_server_url}/call_tool", json={
@@ -828,15 +1037,27 @@ def cache_status():
 @login_required
 def modules(dept):
     icons = {
-        "ftb": "ftb.jpeg", "dmv": "dmv.jpeg", "sanjose": "sanjose.jpeg",
-        "edd": "edd.jpeg", "fiscal": "fiscal.jpeg", "ranchocordova": "ranchocordova.jpeg",
-        "calpers": "calpers.jpeg", "cdfa": "cdfa.jpeg", "energy": "energy.jpeg",
+        "ftb": "ftb.jpeg", 
+        "dmv": "dmv.jpeg", 
+        "sanjose": "sanjose.jpeg",
+        "edd": "edd.jpeg", 
+        "fiscal": "fiscal.jpeg", 
+        "ranchocordova": "ranchocordova.jpeg",
+        "calpers": "calpers.jpeg", 
+        "cdfa": "cdfa.jpeg", 
+        "energy": "energy.jpeg",
     }
+    
     display_names = {
-        "ftb": "Franchise Tax Board (FTB)", "dmv": "Dept of Motor Vehicles",
-        "sanjose": "City of San Jose", "edd": "Employment Development Dept",
-        "fiscal": "Fi$cal", "ranchocordova": "Rancho Cordova",
-        "calpers": "CalPERS", "cdfa": "CDFA", "energy": "Office of Energy Infrastructure",
+        "ftb": "Franchise Tax Board (FTB)", 
+        "dmv": "Dept of Motor Vehicles",
+        "sanjose": "City of San Jose", 
+        "edd": "Employment Development Dept",
+        "fiscal": "Fi$cal", 
+        "ranchocordova": "Rancho Cordova",
+        "calpers": "CalPERS", 
+        "cdfa": "CDFA", 
+        "energy": "Office of Energy Infrastructure",
     }
     
     modules_list = [
@@ -845,14 +1066,22 @@ def modules(dept):
         {"name": "Transaction", "icon": "transaction.png", "route": "oops"},
         {"name": "Insights", "icon": "insights.png", "route": "insights"},
         {"name": "Data Management", "icon": "datamanagement.png", "route": "oops"},
-        {"name": "Voice Agent", "icon": "voiceagent.png", "route": "oops"}
+        {"name": "Voice Agent", "icon": "voiceagent.png", "route": "voice_agent"}
     ]
     
     company_icon = icons.get(dept, "default.jpeg")
     company_name = display_names.get(dept, "Department")
     
     return render_template("modules.html", company_icon=company_icon, 
-                         company_name=company_name, modules=modules_list)
+                           company_name=company_name,modules=modules_list)
+
+
+@app.route("/voice_agent")
+@login_required
+def voice_agent():
+    """Voice Agent Page"""
+    return render_template("voice_agent.html")
+
 
 @app.route("/debug")
 def debug():

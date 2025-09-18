@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FTB - Enterprise Q&A</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <style>
+    body {
+      background-color: #f5f7fa;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      padding: 0;
+    }
+
+.main-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 90%; /* Reduced from 95% */
+  max-width: 1400px; /* Reduced from 1600px */
+  margin: 0 auto;
+  padding: 20px 15px;
+}
+
+.chat-container {
+  flex: 1;
+  background-color: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 80vh; /* Increased from 75vh for better proportion */
+  border: 1px solid #e9ecef;
+}
+
+    .chat-header {
+      background-color: #667eea;
+      color: white;
+      padding: 25px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .chat-header h4 {
+      margin: 0;
+      font-weight: 300;
+      font-size: 1.5rem;
+    }
+
+.response-content {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+}
+
+.response-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    background: white;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.response-content th,
+.response-content td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.response-content th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+}
+
+.response-content tr:hover {
+    background-color: #f8f9fa;
+}
+
+.response-content ul, 
+.response-content ol {
+    padding-left: 1.5rem;
+    margin: 1rem 0;
+}
+
+.response-content li {
+    margin: 0.5rem 0;
+}
+
+.response-content h2 {
+    color: #495057;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 0.5rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.response-content h3 {
+    color: #6c757d;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.response-content strong {
+    color: #495057;
+}
+
+.response-content code {
+    background-color: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.response-content blockquote {
+    border-left: 4px solid #007bff;
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: #6c757d;
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+}
+
+.chat-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.chat-section {
+  flex: 2; /* Takes 2/3 of space when viz panel is open */
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.visualization-section {
+  flex: 1; /* Takes 1/3 of space */
+  border-left: 1px solid #e9ecef;
+  background-color: #fafbfc;
+  display: none;
+  flex-direction: column;
+  min-width: 350px; /* Minimum width for readability */
+  max-width: 500px; /* Maximum width to prevent over-stretching */
+}
+
+    .visualization-section.show {
+      display: flex;
+    }
+
+    .visualization-header {
+      padding: 15px 20px;
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .visualization-content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      max-height: calc(75vh - 60px);
+    }
+
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: 350px;
+      margin-bottom: 25px;
+      border: 1px solid #e9ecef;
+      border-radius: 10px;
+      padding: 10px;
+      background: white;
+    }
+
+    .chart-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .close-viz-btn {
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 3px;
+    }
+
+    .close-viz-btn:hover {
+      background-color: #e9ecef;
+    }
+
+.chat-window {
+  flex: 1;
+  overflow-y: auto;
+  padding: 25px 35px; /* Slightly more padding */
+  background: #ffffff;
+  min-height: 0;
+  max-height: calc(80vh - 220px); /* Adjusted for new container height */
+  scroll-behavior: smooth;
+}
+
+.message {
+  margin-bottom: 20px; /* Reduced from 25px */
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+    }
+
+    
+    .user-message {
+      flex-direction: row-reverse;
+    }
+
+    .bot-message {
+      flex-direction: row;
+    }
+
+    .message-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .user-avatar {
+      background-color: #ff9a9e;
+      color: white;
+    }
+
+    .bot-avatar {
+      background-color: #a8edea;
+      color: #555;
+    }
+
+.message-content {
+  max-width: 85%; /* Slightly larger for readability */
+  padding: 18px 22px; /* More generous padding */
+  border-radius: 18px;
+  word-wrap: break-word;
+  font-size: 15px; /* Slightly larger font */
+  line-height: 1.6;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+    .user-message .message-content {
+      background-color: #667eea;
+      color: white;
+      border-bottom-right-radius: 5px;
+    }
+
+    .bot-message .message-content {
+      background-color: #f8f9fa;
+      color: #333;
+      border: 1px solid #e9ecef;
+      border-bottom-left-radius: 5px;
+    }
+
+    /* Fix text formatting in bot messages */
+    .bot-message .message-content p {
+      margin: 0 0 12px 0;
+      line-height: 1.6;
+    }
+
+    .bot-message .message-content p:last-child {
+      margin-bottom: 0;
+    }
+
+    .bot-message .message-content ul {
+      margin: 10px 0;
+      padding-left: 20px;
+    }
+
+    .bot-message .message-content li {
+      margin-bottom: 8px;
+      line-height: 1.5;
+      color: #444;
+    }
+
+    .bot-message .message-content strong {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .bot-message .message-content em {
+      font-style: italic;
+      color: #555;
+    }
+
+.chat-input {
+  padding: 25px 35px; /* Match chat window padding */
+  background-color: #ffffff;
+  border-top: 1px solid rgba(0,0,0,0.1);
+  flex-shrink: 0;
+}
+
+.input-container {
+  background: white;
+  border-radius: 25px;
+  padding: 8px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+  border: 1px solid #e9ecef;
+  display: flex;
+  align-items: center;
+  /* Remove the max-width limitation */
+  width: 100%; /* Full width of the chat input area */
+}
+
+    #prompt {
+      border: none;
+      outline: none;
+      flex: 1;
+      padding: 12px 20px;
+      font-size: 16px;
+      background: transparent;
+    }
+
+    .send-btn {
+      background-color: #667eea;
+      border: none;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+    }
+
+    .welcome-message {
+      background-color: #a8edea;
+      padding: 15px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      color: #555;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+/* Replace your existing .input-loading and .typing-dots CSS with this: */
+
+.input-loading {
+  display: none;
+  text-align: center;
+  margin-bottom: 15px;
+  padding: 12px;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 15px;
+}
+
+.loading-text {
+  font-size: 14px;
+  font-weight: 500;
+  background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c, #4facfe, #43e97b);
+  background-size: 400% 400%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: colorShift 2s ease-in-out infinite;
+}
+
+@keyframes colorShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Fallback for browsers that don't support background-clip: text */
+@supports not (-webkit-background-clip: text) {
+  .loading-text {
+    background: none;
+    -webkit-text-fill-color: initial;
+    color: #667eea;
+    animation: colorCycle 2s ease-in-out infinite;
+  }
+  
+  @keyframes colorCycle {
+    0% { color: #667eea; }
+    16% { color: #764ba2; }
+    33% { color: #f093fb; }
+    50% { color: #f5576c; }
+    66% { color: #4facfe; }
+    83% { color: #43e97b; }
+    100% { color: #667eea; }
+  }
+}
+
+    .feedback-btn.active { transform: scale(1.1); }
+    .feedback-btn.thumbs-up.active { background-color: #28a745; border-color: #28a745; color: white; }
+    .feedback-btn.thumbs-down.active { background-color: #dc3545; border-color: #dc3545; color: white; }
+
+    .viz-toggle-btn {
+      background-color: #28a745;
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 11px;
+      margin-left: 10px;
+      margin-top: 8px;
+      display: inline-block;
+    }
+
+    .viz-toggle-btn:hover {
+      background-color: #218838;
+    }
+
+    .feedback-container {
+    margin-top: 0;
+    margin-left: 15px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    }
+
+    .feedback-input {
+      width: 300px;
+      padding: 10px;
+    }
+
+    .feedback-row {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  padding-left: 55px;
+  align-items: center; /* Add this to align items horizontally */
+}
+
+    .form-label {
+      margin-bottom: 8px;
+    }
+
+    .debug-info {
+      font-size: 11px;
+      color: #666;
+      margin-top: 5px;
+      padding: 5px 8px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      display: none;
+    }
+
+
+    @media (max-width: 1200px) {
+  .main-container {
+    width: 95%;
+    max-width: none;
+  }
+  
+  .chat-section:only-child {
+    max-width: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .chat-body { 
+    flex-direction: column; 
+    height: auto;
+  }
+  
+  .visualization-section { 
+    border-left: none; 
+    border-top: 1px solid #e9ecef; 
+    max-height: 40vh;
+    min-width: auto;
+    max-width: none;
+  }
+  
+  .chat-container {
+    height: 85vh;
+  }
+  
+  .message-content {
+    max-width: 90%;
+  }
+    }
+    
+
+    /* Better scrollbar styling */
+.chat-window::-webkit-scrollbar,
+.visualization-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-window::-webkit-scrollbar-track,
+.visualization-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.chat-window::-webkit-scrollbar-thumb,
+.visualization-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+.chat-window::-webkit-scrollbar-thumb:hover,
+.visualization-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Better loading animation */
+.input-loading {
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 15px;
+  padding: 12px;
+}
+
+/* Enhanced message styling */
+.bot-message .message-content {
+  position: relative;
+}
+
+.bot-message .message-content::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 15px;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 8px solid #f8f9fa;
+}
+
+.user-message .message-content::before {
+  content: '';
+  position: absolute;
+  right: -8px;
+  top: 15px;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 8px solid #667eea;
+}
+
+/* Better button states */
+.send-btn:hover {
+  background-color: #5a6fd8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.viz-toggle-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+/* Enhanced feedback buttons */
+.feedback-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* Better chart container styling */
+.chart-container {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.chart-container:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+/* Executive summary styling */
+.executive-summary {
+  border-left: 4px solid #667eea !important;
+}
+
+.executive-summary h6 {
+  color: #667eea;
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 8px;
+}
+
+/* Improved welcome message */
+.welcome-message {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  border: none;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Better form styling */
+.input-container:focus-within {
+  box-shadow: 0 5px 25px rgba(102, 126, 234, 0.2);
+  border-color: #667eea;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .message-content {
+    max-width: 90%;
+  }
+  
+  .chart-container {
+    height: 300px !important;
+    margin-bottom: 15px;
+  }
+  
+  .main-container {
+    padding: 10px;
+  }
+}
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-light bg-white shadow-sm sticky-top" style="height: 85px;">
+    <div class="container-fluid d-flex align-items-center" style="height: 75px;">
+        <div class="d-flex align-items-center logo-container">
+            <a href="{{ url_for('login') }}">
+                <img src="{{ url_for('static', filename='llm.png') }}" alt="Logo" style="height:55px; width:auto;">
+            </a>
+            <a href="javascript:history.back()" class="back-arrow" title="Back">&laquo;</a>
+        </div>
+        <div class="d-flex">
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="main-container">
+  <h2 class="text-center dark-blue-text" style="font-size:2.3rem; font-weight:700; margin-top: 25px; margin-bottom:20px; letter-spacing: -0.5px;">
+        Franchise Tax Board - Enterprise Q&A: Project Management
+  </h2>
+  <hr style="border: none; border-top: 2px solid #667eea; margin: 20px 0;">
+
+  <div class="chat-container">
+    <div class="chat-header">
+      <h4 class="mb-0">Conversational Intelligence</h4>
+    </div>
+
+    <div class="chat-body">
+      <div class="chat-section">
+        <div class="chat-window" id="chat-window">
+          <div class="welcome-message">
+            <div class="message-avatar bot-avatar">
+                <i class="fas fa-robot"></i>
+            </div>
+            We are delighted to have you here in the Conversational Intelligence Chat room!
+          </div>
+
+          <div class="message bot-message">
+            <div class="message-avatar bot-avatar">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="message-content">
+                Greetings! How can I help you today?
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-input">
+          <div class="mb-2">
+            <label for="prompt" class="form-label text-muted">Prompt:</label>
+          </div>
+          
+          <div class="input-loading" id="input-loading">
+            <div class="loading-text"><b>Generating response from server...</b></div>
+          </div>
+
+          <form id="chat-form">
+            <div class="input-container">
+              <input type="text" id="prompt" placeholder="How can I help you?">
+              <button type="submit" class="send-btn">
+                <i class="fas fa-paper-plane"></i>
+                Ask the Agent
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="visualization-section" id="visualization-section">
+        <div class="visualization-header">
+          <h5 class="mb-0">Data Visualization</h5>
+          <button class="close-viz-btn" onclick="closeVisualization()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="visualization-content" id="visualization-content">
+          <div class="text-center text-muted">
+            <i class="fas fa-chart-line fa-3x mb-3"></i>
+            <p>Charts will appear here when available</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const form = document.getElementById('chat-form');
+const promptInput = document.getElementById('prompt');
+const chatWindow = document.getElementById('chat-window');
+const visualizationSection = document.getElementById('visualization-section');
+const visualizationContent = document.getElementById('visualization-content');
+
+window.addEventListener('load', () => promptInput.focus());
+
+
+
+// Enhanced formatResponse function with proper markdown table support
+
+function formatResponse(text) {
+  // Clean technical metadata first
+  let cleaned = text
+    .replace(/---[\s\S]*?---/g, '')
+    .replace(/Iterative Analysis Complete[\s\S]*?\./g, '')
+    .replace(/Session total:[\s\S]*?\./g, '')
+    .replace(/Files accessed this query:[\s\S]*?\./g, '')
+    .replace(/\d+ iterations, multiple tool calls used[\s\S]*?\./g, '')
+    .replace(/Processing:[\s\S]*?\([^)]*\)/g, '')
+    .replace(/Successfully read and cached:[\s\S]*?\n/g, '')
+    .replace(/Found \d+ files in Google Drive/g, '')
+    .replace(/Comprehensive search found \d+ unique files/g, '')
+    .replace(/\n\s*\n\s*\n+/g, '\n\n')
+    .trim();
+
+  // Just return as simple text with basic line breaks - NO markdown processing
+  return cleaned.replace(/\n/g, '<br>');
+}
+
+
+function shouldBeBulleted(text) {
+  // Enhanced detection for project data and lists
+  const bulletPatterns = [
+    /\d+\.\s/,  // 1. 2. 3.
+    /[-•]\s/,   // - or • followed by space
+    /:\s*\$?[\d,]+/,  // Key: value patterns like "Project Alpha: $150,000"
+    /\w+:\s*\w/,      // General key: value patterns
+    /Project\s+\w+.*?\$[\d,]+/i,  // Project cost patterns
+    /Planned Cost.*?Actual Cost/i,  // Cost comparison patterns
+    /Cost Variance/i,  // Cost variance mentions
+  ];
+  
+  // If it has multiple sentences with patterns, it should be bulleted
+  const sentences = text.split(/[.!?;]+/).filter(s => s.trim().length > 10);
+  if (sentences.length >= 2) {
+    const patternMatches = bulletPatterns.filter(pattern => 
+      sentences.filter(s => pattern.test(s)).length >= 1
+    ).length;
+    
+    // If multiple patterns match, it's likely list-worthy
+    if (patternMatches >= 2) return true;
+  }
+  
+  // Special check for project cost data (like in your example)
+  const projectCostPattern = /(\w+.*?):\s*Project Cost.*?\$[\d,]+/gi;
+  if (text.match(projectCostPattern) && text.match(projectCostPattern).length >= 2) {
+    return true;
+  }
+  
+  return false;
+}
+
+function convertToBullets(text) {
+  // Handle project cost data specially
+  const projectPattern = /([A-Za-z\s\-]+(?:Inc\.?)?)\s*-?\s*Project Cost:\s*\$?([\d,\.]+)/gi;
+  let projectMatches = [...text.matchAll(projectPattern)];
+  
+  if (projectMatches.length >= 2) {
+    const bullets = projectMatches.map(match => {
+      const [, name, cost] = match;
+      return `<li><strong>${name.trim()}</strong>: Project Cost $${cost}</li>`;
+    });
+    
+    // Add any additional info as separate bullets
+    const remainingText = text.replace(projectPattern, '').trim();
+    if (remainingText.length > 50) {
+      const additionalInfo = remainingText.split(/[.!]+/).filter(s => s.trim().length > 20);
+      additionalInfo.forEach(info => {
+        if (info.trim()) {
+          bullets.push(`<li>${info.trim()}</li>`);
+        }
+      });
+    }
+    
+    return `<ul>${bullets.join('')}</ul>`;
+  }
+  
+  // Handle general key-value patterns
+  const kvPattern = /([^.!?:]+):\s*([^.!?]+)/g;
+  let kvMatches = [...text.matchAll(kvPattern)];
+  
+  if (kvMatches.length >= 2) {
+    const bullets = kvMatches.map(match => {
+      const [, key, value] = match;
+      return `<li><strong>${key.trim()}</strong>: ${value.trim()}</li>`;
+    });
+    
+    return `<ul>${bullets.join('')}</ul>`;
+  }
+  
+  // Fall back to sentence-based bullets
+  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 10);
+  
+  if (sentences.length >= 3) {
+    const bullets = sentences.map(sentence => `<li>${sentence.trim()}</li>`);
+    return `<ul>${bullets.slice(0, 8).join('')}</ul>`; // Limit to 8 bullets
+  }
+  
+  return `<p>${text}</p>`;
+}
+
+function convertLists(text) {
+  // Convert unordered lists
+  text = text.replace(/^[\s]*[-*+]\s+(.+)$/gm, '<li>$1</li>');
+  text = text.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+  
+  // Convert ordered lists
+  text = text.replace(/^[\s]*\d+\.\s+(.+)$/gm, '<li>$1</li>');
+  
+  return text;
+}
+
+function convertParagraphs(text) {
+  // Split by double newlines and wrap in paragraphs
+  const paragraphs = text.split(/\n\s*\n/);
+  
+  return paragraphs
+    .map(p => p.trim())
+    .filter(p => p.length > 0)
+    .map(p => {
+      // Don't wrap if it's already HTML
+      if (p.startsWith('<')) return p;
+      return `<p>${p}</p>`;
+    })
+    .join('');
+}
+  
+function shouldBeBulleted(text) {
+  // Enhanced detection for bullet-worthy content
+  const bulletPatterns = [
+    /\d+\.\s/,  // 1. 2. 3.
+    /[-•]\s/,   // - or • followed by space
+    /:\s*\$?[\d,]+/,  // Key: value patterns like "Project Alpha: $150,000"
+    /\w+:\s*\w/,      // General key: value patterns
+    /Project\s+\w+.*?\$[\d,]+/i,  // Project cost patterns
+    /Highest|Lowest|Cost|Budget/i,  // Financial keywords
+  ];
+  
+  // If it has multiple sentences with patterns, it should be bulleted
+  const sentences = text.split(/[.!?;]+/).filter(s => s.trim().length > 10);
+  if (sentences.length >= 2) {
+    return bulletPatterns.some(pattern => 
+      sentences.filter(s => pattern.test(s)).length >= 2
+    );
+  }
+  
+  // Also check for lists of projects with costs
+  if (/Project.*?\$.*?Project.*?\$/i.test(text)) {
+    return true;
+  }
+  
+  return false;
+}
+
+function convertToBullets(text) {
+  // Enhanced bullet conversion for project cost data
+  
+  // Special handling for project cost lists
+  if (/Project.*?\$.*?Project.*?\$/i.test(text)) {
+    const projectMatches = text.match(/([A-Za-z\s]+):\s*\$?([\d,\.]+)M?/g);
+    if (projectMatches && projectMatches.length > 1) {
+      const bullets = projectMatches.map(match => {
+        const [, name, amount] = match.match(/([^:]+):\s*\$?([\d,\.]+)M?/) || [];
+        if (name && amount) {
+          return `<strong>${name.trim()}</strong>: $${amount}${match.includes('M') ? 'M' : ''}`;
+        }
+        return match;
+      });
+      return '<ul>' + bullets.map(bullet => `<li>${bullet}</li>`).join('') + '</ul>';
+    }
+  }
+  
+  // Split into sentences and convert appropriate ones to bullets
+  const sentences = text.split(/[.!?;]+/).filter(s => s.trim().length > 5);
+  
+  if (sentences.length <= 1) {
+    return `<p>${text}</p>`;
+  }
+  
+  let bullets = [];
+  let currentBullet = '';
+  
+  sentences.forEach(sentence => {
+    sentence = sentence.trim();
+    if (sentence) {
+      // Check if this should be a new bullet point
+      if (/\d+\.\s/.test(sentence) || /[-•]\s/.test(sentence) || /:/.test(sentence) || /Highest|Lowest|Project/i.test(sentence)) {
+        if (currentBullet) {
+          bullets.push(currentBullet);
+        }
+        currentBullet = sentence.replace(/^\d+\.\s*/, '').replace(/^[-•]\s*/, '');
+      } else {
+        // Continue current bullet
+        currentBullet += currentBullet ? '. ' + sentence : sentence;
+      }
+    }
+  });
+  
+  if (currentBullet) {
+    bullets.push(currentBullet);
+  }
+  
+  if (bullets.length > 1) {
+    return '<ul>' + bullets.map(bullet => `<li>${bullet}</li>`).join('') + '</ul>';
+  } else {
+    return `<p>${text}</p>`;
+  }
+}
+  
+
+
+function createChart(containerId, data, type = 'auto', title = '') {
+  console.log(`Creating chart in ${containerId}:`, data);
+  
+  const container = document.getElementById(containerId);
+  if (!container) {
+    console.error(`Container ${containerId} not found`);
+    return;
+  }
+  
+  // Find or create canvas (title is already in the container HTML)
+  let canvas = container.querySelector('canvas');
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    container.appendChild(canvas);
+  }
+  
+  const ctx = canvas.getContext('2d');
+  const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#43e97b', '#ff9a9e', '#a8edea', '#ffeaa7', '#fab1a0'];
+  
+  // Smart chart type selection with better logic
+  if (type === 'auto') {
+    const values = Object.values(data);
+    const keys = Object.keys(data);
+    
+    const isTimeSeries = keys.some(key => 
+      /\d{4}/.test(key) || /Q[1-4]/.test(key) || /Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec/.test(key)
+    );
+    const isFinancial = values.some(v => v > 1000);
+    const hasMany = values.length > 8;
+    
+    if (isTimeSeries) {
+      type = 'line';
+    } else if (hasMany) {
+      type = 'bar';
+    } else if (isFinancial && values.length <= 6) {
+      type = 'doughnut';
+    } else {
+      type = values.length <= 5 ? 'doughnut' : 'bar';
+    }
+  }
+  
+  try {
+    new Chart(ctx, {
+      type: type,
+      data: {
+        labels: Object.keys(data),
+        datasets: [{
+          label: title || 'Project Data',
+          data: Object.values(data),
+          backgroundColor: type === 'doughnut' 
+            ? colors.slice(0, Object.keys(data).length) 
+            : colors.map(c => c + '80'),
+          borderColor: colors.slice(0, Object.keys(data).length),
+          borderWidth: 2,
+          borderRadius: type === 'bar' ? 8 : 0,
+          tension: type === 'line' ? 0.4 : 0,
+          fill: type === 'line' ? true : false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { 
+          legend: { 
+            display: type === 'doughnut',
+            position: 'bottom',
+            labels: {
+              boxWidth: 12,
+              padding: 15,
+              usePointStyle: true
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0,0,0,0.8)',
+            titleColor: 'white',
+            bodyColor: 'white',
+            borderColor: '#667eea',
+            borderWidth: 1,
+            callbacks: {
+              label: function(context) {
+                let label = context.label || '';
+                if (label) {
+                  label += ': ';
+                }
+                const value = context.parsed.y || context.parsed;
+                // Format large numbers with commas and currency
+                if (value >= 1000000) {
+                  label += '$' + (value / 1000000).toFixed(1) + 'M';
+                } else if (value >= 1000) {
+                  label += '$' + value.toLocaleString();
+                } else {
+                  label += value;
+                }
+                return label;
+              }
+            }
+          }
+        },
+        scales: type === 'doughnut' ? {} : { 
+          y: { 
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(0,0,0,0.1)'
+            },
+            ticks: {
+              callback: function(value) {
+                if (value >= 1000000) {
+                  return '$' + (value / 1000000).toFixed(1) + 'M';
+                } else if (value >= 1000) {
+                  return '$' + (value / 1000).toFixed(0) + 'K';
+                }
+                return value;
+              }
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            }
+          }
+        }
+      }
+    });
+    console.log(`Chart ${type} created successfully`);
+  } catch (error) {
+    console.error('Error creating chart:', error);
+  }
+}
+
+// Enhanced executive summary display
+function createExecutiveSummary(data) {
+  if (!data.executive_summary) return '';
+  
+  const summary = data.executive_summary;
+  let html = `
+    <div class="executive-summary mt-4 p-4 border rounded" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+      <h6 class="mb-3">
+        <i class="fas fa-chart-line text-primary"></i> 
+        <strong>Executive Summary</strong>
+      </h6>
+  `;
+  
+  if (summary.key_metrics && summary.key_metrics.length > 0) {
+    html += `
+      <div class="mb-3">
+        <strong>Key Metrics:</strong>
+        <ul class="mb-2 mt-1">
+          ${summary.key_metrics.map(m => `<li class="small">${m}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+  }
+  
+  if (summary.trends && summary.trends.length > 0) {
+    html += `
+      <div class="mb-3">
+        <strong>Trends:</strong>
+        <div class="small text-muted">${summary.trends.join(' • ')}</div>
+      </div>
+    `;
+  }
+  
+  if (summary.total_value) {
+    html += `
+      <div class="text-center p-2 bg-white rounded border">
+        <strong>Total Value: $${summary.total_value.toLocaleString()}</strong>
+      </div>
+    `;
+  }
+  
+  html += '</div>';
+  return html;
+}	
+	
+
+function showVisualization(data) {
+  console.log('showVisualization called with:', data);
+  
+  if (!data) {
+    console.log('No data provided to showVisualization');
+    return;
+  }
+  
+  visualizationContent.innerHTML = '';
+  let chartsCreated = 0;
+  
+  // Handle the new structure from VisualizationAnalyst
+  if (data.visualizations && Array.isArray(data.visualizations)) {
+    console.log(`Processing ${data.visualizations.length} visualizations from analyst`);
+    
+    data.visualizations.forEach((viz, index) => {
+      if (viz.data && Object.keys(viz.data).length > 0) {
+        const chartId = `viz_${index}`;
+        const div = document.createElement('div');
+        
+        // Adjust chart height based on data complexity
+        const dataPoints = Object.keys(viz.data).length;
+        const chartHeight = Math.max(350, Math.min(600, dataPoints * 50));
+        
+        div.innerHTML = `
+          <div class="chart-container" id="${chartId}" style="height: ${chartHeight}px;">
+            <div class="chart-title">${viz.title || `Chart ${index + 1}`}</div>
+          </div>
+        `;
+        visualizationContent.appendChild(div);
+        
+        createChart(chartId, viz.data, viz.type || 'auto', '');
+        chartsCreated++;
+      }
+    });
+    
+    // Add executive summary if available
+    if (data.executive_summary) {
+      const summaryDiv = document.createElement('div');
+      summaryDiv.className = 'mt-4 p-3 bg-light rounded';
+      summaryDiv.innerHTML = `
+        <h6><i class="fas fa-chart-line"></i> Executive Summary</h6>
+        ${data.executive_summary.key_metrics ? 
+          `<ul class="mb-2">${data.executive_summary.key_metrics.map(m => `<li>${m}</li>`).join('')}</ul>` : ''}
+        ${data.executive_summary.trends ? 
+          `<div class="small text-muted">${data.executive_summary.trends.join(' • ')}</div>` : ''}
+      `;
+      visualizationContent.appendChild(summaryDiv);
+    }
+  } else {
+    // Handle legacy format (fallback from your old code)
+    console.log('Processing legacy format data');
+    Object.keys(data).forEach((key, index) => {
+      if (typeof data[key] === 'object' && data[key] !== null && Object.keys(data[key]).length > 0) {
+        const title = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        const chartId = `legacy_${index}`;
+        
+        // Adjust chart height based on data complexity
+        const dataPoints = Object.keys(data[key]).length;
+        const chartHeight = Math.max(350, Math.min(600, dataPoints * 50));
+        
+        const div = document.createElement('div');
+        div.innerHTML = `
+          <div class="chart-container" id="${chartId}" style="height: ${chartHeight}px;">
+            <div class="chart-title">${title}</div>
+          </div>
+        `;
+        visualizationContent.appendChild(div);
+        
+        createChart(chartId, data[key], 'auto', '');
+        chartsCreated++;
+      }
+    });
+  }
+  
+  if (chartsCreated > 0) {
+    visualizationSection.classList.add('show');
+    console.log(`Successfully created ${chartsCreated} charts`);
+    
+    // Smooth scroll to top of visualization section
+    setTimeout(() => {
+      visualizationContent.scrollTop = 0;
+    }, 100);
+  } else {
+    console.log('No valid chart data found');
+    // Show a message that no charts could be created
+    visualizationContent.innerHTML = `
+      <div class="text-center text-muted p-4">
+        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+        <p>No visualization data available</p>
+      </div>
+    `;
+  }
+}
+
+function closeVisualization() {
+  visualizationSection.classList.remove('show');
+}
+
+function showVisualizationFromBackend() {
+  if (window.currentVisualizationData) {
+    showVisualization(window.currentVisualizationData);
+  } else {
+    console.log('No currentVisualizationData available');
+  }
+}
+
+
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const userMessage = promptInput.value.trim();
+  if (!userMessage) return;
+
+  const userDiv = document.createElement('div');
+  userDiv.className = 'message user-message';
+  userDiv.innerHTML = `
+    <div class="message-avatar user-avatar">
+      <i class="fas fa-user"></i>
+    </div>
+    <div class="message-content">${userMessage}</div>
+  `;
+  chatWindow.appendChild(userDiv);
+  promptInput.value = '';
+  
+  // Immediate scroll after user message
+  scrollToBottom();
+
+  document.getElementById('input-loading').style.display = 'block';
+
+  try {
+    const response = await fetch('/qa_api', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: userMessage })
+    });
+
+    const data = await response.json();
+    console.log('Full response data:', data);
+    
+    document.getElementById('input-loading').style.display = 'none';
+
+    const formattedAnswer = formatResponse(data.answer || 'No response');
+
+    const botDiv = document.createElement('div');
+    botDiv.className = 'message bot-message';
+    botDiv.innerHTML = `
+      <div class="message-avatar bot-avatar">
+          <i class="fas fa-robot"></i>
+      </div>
+      <div class="message-content">
+        ${formattedAnswer}
+        ${data.has_visualization ? '<button class="viz-toggle-btn" onclick="showVisualizationFromBackend()"><i class="fas fa-chart-line"></i> Show Chart</button>' : ''}
+      </div>
+    `;
+    chatWindow.appendChild(botDiv);
+
+    // Scroll after bot response
+    scrollToBottom();
+
+    // Add debug info if available (keep hidden)
+    if (data.debug_info) {
+      const debugDiv = document.createElement('div');
+      debugDiv.className = 'debug-info';
+      debugDiv.innerHTML = `
+        Debug: Viz=${data.debug_info.has_viz_keyword}, Data=${data.debug_info.has_data_keyword}, 
+        Numerical=${data.debug_info.has_numerical_data}, Charts=${data.debug_info.viz_charts_generated}
+      `;
+      debugDiv.style.display = 'none'; // Keep hidden
+      chatWindow.appendChild(debugDiv);
+    }
+
+    const feedbackDiv = document.createElement('div');
+    feedbackDiv.className = 'feedback-row';
+    feedbackDiv.innerHTML = `
+      <button class="btn feedback-btn thumbs-up" onclick="toggleFeedback(this, 'up')">
+        <i class="fas fa-thumbs-up"></i>
+      </button>
+      <button class="btn feedback-btn thumbs-down" onclick="toggleFeedback(this, 'down')">
+        <i class="fas fa-thumbs-down"></i>
+      </button>
+    `;
+    chatWindow.appendChild(feedbackDiv);
+
+    window.currentVisualizationData = data.visualization;
+    
+    // Auto-show visualization if available
+    if (data.has_visualization && data.visualization) {
+      console.log('Auto-showing visualization');
+      showVisualization(data.visualization);
+    }
+
+    // Final scroll to ensure everything is visible
+    scrollToBottom();
+
+} catch (error) {
+    document.getElementById('input-loading').style.display = 'none';
+    console.error('Detailed error:', error);
+    console.error('Error stack:', error.stack);
+    
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'message bot-message';
+    errorDiv.innerHTML = `
+      <div class="message-avatar bot-avatar">
+          <i class="fas fa-robot"></i>
+      </div>
+      <div class="message-content">Error details: ${error.message}<br>Check console for more details</div>
+    `;
+    chatWindow.appendChild(errorDiv);
+    
+    scrollToBottom();
+  }
+});
+
+// Improved scrolling function
+function scrollToBottom() {
+  // Use requestAnimationFrame for smooth scrolling
+  requestAnimationFrame(() => {
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  });
+}
+      
+
+function toggleFeedback(btn, type) {
+  const feedbackRow = btn.closest('.feedback-row');
+  const otherBtn = feedbackRow.querySelector(type === 'up' ? '.thumbs-down' : '.thumbs-up');
+  
+  otherBtn.classList.remove('active');
+  btn.classList.toggle('active');
+  
+  if ((type=='down' || type=='up') && btn.classList.contains('active')) {
+    if (!feedbackRow.querySelector('.feedback-container')) {
+      const container = document.createElement('div');
+      container.className = 'feedback-container';
+      container.innerHTML = `
+        <input type="text" class="form-control feedback-input" placeholder="Tell us what could be improved..." style="width: 250px;">
+        <button class="btn btn-primary btn-sm" onclick="submitFeedback(this)">Submit</button>
+      `;
+      feedbackRow.appendChild(container); // This will add it to the right of the buttons
+    }
+  } else {
+    const container = feedbackRow.querySelector('.feedback-container');
+    if (container) container.remove();
+  }
+}
+
+function submitFeedback(btn) {
+  const input = btn.parentElement.querySelector('input');
+  if (input && input.value.trim()) {
+    input.disabled = true;
+    btn.disabled = true;
+    btn.textContent = 'Thank you!';
+  }
+}
+</script>
+
+</body>
+</html>

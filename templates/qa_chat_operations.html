@@ -7,6 +7,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
   <style>
@@ -56,7 +57,82 @@
       font-size: 1.5rem;
     }
 
+.response-content {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+}
 
+.response-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    background: white;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.response-content th,
+.response-content td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.response-content th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+}
+
+.response-content tr:hover {
+    background-color: #f8f9fa;
+}
+
+.response-content ul, 
+.response-content ol {
+    padding-left: 1.5rem;
+    margin: 1rem 0;
+}
+
+.response-content li {
+    margin: 0.5rem 0;
+}
+
+.response-content h2 {
+    color: #495057;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 0.5rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.response-content h3 {
+    color: #6c757d;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.response-content strong {
+    color: #495057;
+}
+
+.response-content code {
+    background-color: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.response-content blockquote {
+    border-left: 4px solid #007bff;
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: #6c757d;
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+}
 
 .chat-body {
   display: flex;
@@ -366,16 +442,25 @@
     }
 
     .feedback-container {
-      margin-top: 8px;
-      display: flex;
-      gap: 10px;
-      padding-left: 30px;
+    margin-top: 0;
+    margin-left: 15px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
     }
 
     .feedback-input {
       width: 300px;
       padding: 10px;
     }
+
+    .feedback-row {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  padding-left: 55px;
+  align-items: center; /* Add this to align items horizontally */
+}
 
     .form-label {
       margin-bottom: 8px;
@@ -573,7 +658,7 @@
 
 <div class="main-container">
   <h2 class="text-center dark-blue-text" style="font-size:2.3rem; font-weight:700; margin-top: 25px; margin-bottom:20px; letter-spacing: -0.5px;">
-        Franchise Tax Board - Enterprise Q&A
+        Franchise Tax Board - Enterprise Q&A: Operations Management
   </h2>
   <hr style="border: none; border-top: 2px solid #667eea; margin: 20px 0;">
 
@@ -667,50 +752,10 @@ function formatResponse(text) {
     .replace(/Found \d+ files in Google Drive/g, '')
     .replace(/Comprehensive search found \d+ unique files/g, '')
     .replace(/\n\s*\n\s*\n+/g, '\n\n')
-    .replace(/\s+/g, ' ')
     .trim();
 
-  // Convert markdown to HTML
-  return convertMarkdownToHtml(cleaned);
-}
-
-
-function formatResponse(text) {
-  // Clean technical metadata first
-  let cleaned = text
-    .replace(/---[\s\S]*?---/g, '')
-    .replace(/Iterative Analysis Complete[\s\S]*?\./g, '')
-    .replace(/Session total:[\s\S]*?\./g, '')
-    .replace(/Files accessed this query:[\s\S]*?\./g, '')
-    .replace(/\d+ iterations, multiple tool calls used[\s\S]*?\./g, '')
-    .replace(/Processing:[\s\S]*?\([^)]*\)/g, '')
-    .replace(/Successfully read and cached:[\s\S]*?\n/g, '')
-    .replace(/Found \d+ files in Google Drive/g, '')
-    .replace(/Comprehensive search found \d+ unique files/g, '')
-    .replace(/[=\-|]{10,}/g, '') // Remove ASCII art
-    .replace(/\n\s*\n\s*\n+/g, '\n\n')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  // Convert to proper HTML with smart bullet formatting
-  return cleaned
-    .split('\n\n')
-    .map(paragraph => paragraph.trim())
-    .filter(p => p.length > 5)
-    .map(paragraph => {
-      // Format bold and italic text first
-      paragraph = paragraph
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.+?)\*/g, '<em>$1</em>');
-      
-      // Check if this should be converted to bullets
-      if (shouldBeBulleted(paragraph)) {
-        return convertToBullets(paragraph);
-      }
-      
-      return `<p>${paragraph}</p>`;
-    })
-    .join('');
+  // Just return as simple text with basic line breaks - NO markdown processing
+  return cleaned.replace(/\n/g, '<br>');
 }
 
 function shouldBeBulleted(text) {
@@ -1210,7 +1255,7 @@ form.addEventListener('submit', async (e) => {
   document.getElementById('input-loading').style.display = 'block';
 
   try {
-    const response = await fetch('/qa_api', {
+    const response = await fetch('/qa_operations_api', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query: userMessage })
@@ -1308,15 +1353,15 @@ function toggleFeedback(btn, type) {
   otherBtn.classList.remove('active');
   btn.classList.toggle('active');
   
-  if (type === 'down' && btn.classList.contains('active')) {
+  if ((type=='down' || type=='up') && btn.classList.contains('active')) {
     if (!feedbackRow.querySelector('.feedback-container')) {
       const container = document.createElement('div');
       container.className = 'feedback-container';
       container.innerHTML = `
-        <input type="text" class="form-control feedback-input" placeholder="Tell us what could be improved...">
-        <button class="btn btn-primary" onclick="submitFeedback(this)">Submit</button>
+        <input type="text" class="form-control feedback-input" placeholder="Tell us what could be improved..." style="width: 250px;">
+        <button class="btn btn-primary btn-sm" onclick="submitFeedback(this)">Submit</button>
       `;
-      feedbackRow.appendChild(container);
+      feedbackRow.appendChild(container); // This will add it to the right of the buttons
     }
   } else {
     const container = feedbackRow.querySelector('.feedback-container');

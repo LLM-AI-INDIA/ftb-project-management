@@ -13,19 +13,12 @@
 <!-- Navbar -->
 <nav class="navbar navbar-light bg-white shadow-sm sticky-top" style="height: 85px;">
     <div class="container-fluid d-flex align-items-center" style="height: 75px;">
-
-        <!-- Logo with white background -->
         <div class="d-flex align-items-center logo-container">
             <a href="{{ url_for('login') }}">
                 <img src="{{ url_for('static', filename='llm.png') }}" alt="Logo" style="height:55px; width:auto;">
             </a>
-            <!-- Left Arrow -->
-            <a href="javascript:history.back()" class="back-arrow" title="Back">
-              &laquo;
-            </a>
+            <a href="javascript:history.back()" class="back-arrow" title="Back">&laquo;</a>
         </div>
-
-        <!-- Logout button -->
         <div class="d-flex">
             <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
         </div>
@@ -34,57 +27,293 @@
 
 <!-- Page Content -->
 <div class="container py-5">
-  <!-- Main Title and Subtitle -->
-
-  <div class="text-center">
-    <img src="{{ url_for('static', filename='icons/' + company_icon) }}" alt="Company Logo" class="company-logo" style="width:25%;height:25%;">
-  </div>
-  
-  <h2 class="text-center dark-blue-text modules-title" style="font-size:2.3rem; font-weight:700; margin-top: 25px; margin-bottom:35px; letter-spacing: -0.5px;">
+    <div class="text-center">
+        <img src="{{ url_for('static', filename='icons/' + company_icon) }}" alt="Company Logo" class="company-logo" style="width:25%;height:25%;">
+    </div>
+    
+    <h2 class="text-center dark-blue-text modules-title" style="font-size:2.3rem; font-weight:700; margin-top: 25px; margin-bottom:35px; letter-spacing: -0.5px;">
         Enterprise Orchestration Suite
-  </h2>
-  <!-- Lighter horizontal line -->
+    </h2>
+    
     <div class="horizontal-line" style="height: 4px; width: 90vw; background: #f8f8f8; margin: 30px 0 5px 0; position: relative; left: 50%; right: 50%; transform: translateX(-50%); border: none; margin-bottom: 40px"></div>  
 
-    <!-- Outer container with border (similar to your sample) -->
+    <!-- Main container with popup support -->
     <div class="light-border modules-container" style="
-        border: 5px solid #ccd0d2;
+        border: 2px solid #e1e5e9;
         border-radius: 22px;
         background: #fff;
-        padding: 25px 50px;
+        padding: 30px 40px;
         margin: 0 auto;
         width: 920px;
-        display: block;"
+        display: block;
+        position: relative;"
     >
         <!-- Module Grid -->
         <div class="modules-grid">
-            {% set modules = [
-                {"name": "Enterprise QA", "icon": "qa.png", "route": "qa_page"},
+            <!-- Enterprise QA with special handling -->
+            <div class="module-item dashboard-tile" id="qa-module">
+                <div class="text-decoration-none" onclick="toggleQAPopup()" style="cursor: pointer;">
+                    <div class="card module-card text-center">
+                        <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                            <img src="{{ url_for('static', filename='icons/qa.png') }}"
+                                 alt="Enterprise QA" class="module-icon">
+                            <h5 class="module-name">Enterprise QA</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Other modules -->
+            {% set other_modules = [
                 {"name": "Workflow", "icon": "workflow.png", "route": "oops"},
                 {"name": "Transaction", "icon": "transaction.png", "route": "oops"},
                 {"name": "Insights", "icon": "insights.png", "route": "insights"},
                 {"name": "Data Management", "icon": "datamanagement.png", "route": "oops"},
-                {"name": "Voice Agent", "icon": "voiceagent.png", "route": "oops"}
+                {"name": "Voice Agent", "icon": "voiceagent.png", "route": "voice_agent"}
             ] %}
 
-            {% for module in modules %}
-            <div class="module-item dashboard-tile">
-                <a href="{{ url_for(module.route) }}" class="text-decoration-none">
-                    <div class="card module-card text-center">
-                        <div class="card-body d-flex flex-column align-items-center justify-content-center">
-                            <img src="{{ url_for('static', filename='icons/' + module.icon) }}"
-                                 alt="{{ module.name }}"
-                                 class="module-icon">
-                            <h5 class="module-name">{{ module.name }}</h5>
+{% for module in other_modules %}
+<div class="module-item dashboard-tile">
+    {% if module.route.startswith('http') %}
+        <a href="{{ module.route }}" target="_blank" class="text-decoration-none">
+    {% else %}
+        <a href="{{ url_for(module.route) }}" class="text-decoration-none">
+    {% endif %}
+        <div class="card module-card text-center">
+            <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                <img src="{{ url_for('static', filename='icons/' + module.icon) }}"
+                     alt="{{ module.name }}" class="module-icon">
+                <h5 class="module-name">{{ module.name }}</h5>
+            </div>
+        </div>
+    </a>
+</div>
+{% endfor %}
+
+        <!-- QA Selection Popup -->
+        <div id="qa-popup" class="qa-selection-popup" style="display: none;">
+            <div class="popup-content">
+                <div class="popup-header">
+                    <h5>Choose Q&A Type</h5>
+                    <button class="close-popup" onclick="closeQAPopup()">&times;</button>
+                </div>
+                <div class="popup-body">
+                    <div class="qa-option" onclick="window.location.href='{{ url_for('qa_projects') }}'">
+                        <div class="qa-option-icon">
+                            <i class="fas fa-project-diagram"></i>
+                        </div>
+                        <div class="qa-option-text">
+                            <h6>Project Management</h6>
+                            <small>Query project data, budgets, timelines</small>
                         </div>
                     </div>
-                </a>
+                    <div class="qa-option" onclick="window.location.href='{{ url_for('qa_operations') }}'">
+                        <div class="qa-option-icon">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <div class="qa-option-text">
+                            <h6>Operational Q&A</h6>
+                            <small>Access operational documents</small>
+                        </div>
+                    </div>
+                </div>
             </div>
-            {% endfor %}
         </div>
     </div>
-
 </div>
+
+<style>
+/* QA Selection Popup Styles */
+.qa-selection-popup {
+    position: absolute;
+    top: 50%;
+    left: -320px; /* Position to the left of the container */
+    transform: translateY(-50%);
+    width: 300px;
+    background: white;
+    border: 2px solid #d1d5db;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    z-index: 1000;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50%) translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(-50%) translateX(0);
+    }
+}
+
+.popup-content {
+    padding: 0;
+}
+
+.popup-header {
+    background: #667eea;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 13px 13px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.popup-header h5 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.close-popup {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-popup:hover {
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+}
+
+.popup-body {
+    padding: 20px;
+}
+
+.qa-option {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.qa-option:last-child {
+    margin-bottom: 0;
+}
+
+.qa-option:hover {
+    border-color: #c0e6d0;
+    background: #f8fffe;
+    box-shadow: 0 2px 8px rgba(23, 201, 100, 0.3);
+}
+
+.qa-option-icon {
+    margin-right: 15px;
+    font-size: 1.5rem;
+    color: #667eea;
+    width: 30px;
+    text-align: center;
+}
+
+.qa-option-text h6 {
+    margin: 0 0 2px 0;
+    font-weight: 600;
+    color: #333;
+}
+
+.qa-option-text small {
+    color: #666;
+    font-size: 12px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .qa-selection-popup {
+        left: -280px;
+        width: 260px;
+    }
+}
+
+@media (max-width: 768px) {
+    .qa-selection-popup {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90%;
+        max-width: 300px;
+    }
+}
+
+/* Overlay for mobile */
+.popup-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+}
+
+.popup-overlay.show {
+    display: block;
+}
+</style>
+
+<script>
+function toggleQAPopup() {
+    const popup = document.getElementById('qa-popup');
+    const overlay = document.querySelector('.popup-overlay');
+    
+    if (popup.style.display === 'none' || popup.style.display === '') {
+        popup.style.display = 'block';
+        
+        // Add overlay for mobile
+        if (window.innerWidth <= 768) {
+            if (!overlay) {
+                const newOverlay = document.createElement('div');
+                newOverlay.className = 'popup-overlay';
+                newOverlay.onclick = closeQAPopup;
+                document.body.appendChild(newOverlay);
+            }
+            document.querySelector('.popup-overlay').classList.add('show');
+        }
+    } else {
+        closeQAPopup();
+    }
+}
+
+function closeQAPopup() {
+    const popup = document.getElementById('qa-popup');
+    const overlay = document.querySelector('.popup-overlay');
+    
+    popup.style.display = 'none';
+    
+    if (overlay) {
+        overlay.classList.remove('show');
+    }
+}
+
+// Close popup when clicking outside (for desktop)
+document.addEventListener('click', function(e) {
+    const popup = document.getElementById('qa-popup');
+    const qaModule = document.getElementById('qa-module');
+    
+    if (popup.style.display === 'block' && 
+        !popup.contains(e.target) && 
+        !qaModule.contains(e.target)) {
+        closeQAPopup();
+    }
+});
+</script>
 
 </body>
 </html>

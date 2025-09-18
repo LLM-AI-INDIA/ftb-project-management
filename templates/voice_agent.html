@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FTB - Voice Agent</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='mobile.css') }}">    
+</head>
+<body class="bg-white">
+
+<!-- Navbar -->
+<nav class="navbar navbar-light bg-white shadow-sm sticky-top" style="height: 85px;">
+    <div class="container-fluid d-flex align-items-center" style="height: 75px;">
+        <div class="d-flex align-items-center logo-container">
+            <a href="{{ url_for('login') }}">
+                <img src="{{ url_for('static', filename='llm.png') }}" alt="Logo" style="height:55px; width:auto;">
+            </a>
+            <a href="javascript:history.back()" class="back-arrow" title="Back">&laquo;</a>
+        </div>
+        <div class="d-flex">
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<!-- Page Content -->
+<div class="container py-5">
+    <!-- Title -->
+    <h2 class="text-center dark-blue-text" style="font-size:2.3rem; font-weight:700; margin-top: 25px; margin-bottom:35px; letter-spacing: -0.5px;">
+        Franchise Tax Board – Voice Agent for Live Conversation
+    </h2>
+    
+    <!-- Lighter horizontal line -->
+    <div class="horizontal-line" style="height: 4px; width: 90vw; background: #f8f8f8; margin: 30px 0 5px 0; position: relative; left: 50%; right: 50%; transform: translateX(-50%); border: none; margin-bottom: 40px"></div>
+
+    <!-- Outer box with light border - matching other pages -->
+    <div class="page-container" style="
+        border: 2px solid #e1e5e9;
+        border-radius: 22px;
+        background: #fff;
+        padding: 50px 40px;
+        margin: 0 auto;
+        width: 920px;
+        display: block;
+        text-align: center;"
+    >
+        
+        <!-- Updated Phone Icon and Number Section -->
+        <div class="mb-5 d-flex align-items-center justify-content-center gap-4">
+            <img src="{{ url_for('static', filename='icons/voiceagent.png') }}" 
+                 alt="AI Agent" 
+                 height=20% width=20%>
+            <div class="phone-number-tile">
+                <h2 class="phone-number mb-0">(517) 409-1412</h2>
+            </div>
+        </div>
+        
+        <!-- AI Agent Image -->
+        <div class="ai-agent-container mb-4">
+            <img src="{{ url_for('static', filename='icons/va_page.png') }}" 
+                 alt="AI Agent" 
+                 class="ai-agent-image">
+        </div>
+        
+        <!-- Instructions -->
+        <div class="instructions">            
+            <!-- Call Button -->
+            <a href="tel:+15174091412" class="btn btn-call btn-lg mt-3">
+                <i class="fas fa-phone me-2"></i>
+                Call Now
+            </a>
+        </div>
+        
+        <!-- Features Row -->
+        <div class="row mt-5 pt-4">
+            <div class="col-md-4 text-center mb-3">
+                <div class="feature-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h6 style="color: #333; font-weight: 600;">24/7 Availability</h6>
+                <p class="text-muted small">Always ready to assist</p>
+            </div>
+            <div class="col-md-4 text-center mb-3">
+                <div class="feature-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h6 style="color: #333; font-weight: 600;">AI-Powered</h6>
+                <p class="text-muted small">Intelligent responses</p>
+            </div>
+            <div class="col-md-4 text-center mb-3">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h6 style="color: #333; font-weight: 600;">Secure</h6>
+                <p class="text-muted small">Protected conversations</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Updated Headset Icon */
+.headset-icon-container {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    flex-shrink: 0;
+}
+
+.headset-icon-container .fa-headset {
+    font-size: 2.2rem;
+    color: white;
+}
+
+/* Phone Number Tile */
+.phone-number-tile {
+    background: #fff;
+    border: 2px solid #dce1e5 !important; /* Lighter border */
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px; /* Increased margin for spacing */
+    height: 120px;
+    width: 300px;
+    box-shadow: none;
+    transition: border 0.05s, box-shadow 0.18s;
+    padding: 5px;
+}
+
+.phone-number-tile:hover{
+    border: 2px solid #c0e6d0 !important; /* Thicker border, same light color */
+    box-shadow:
+        0 0 20px 10px rgba(23, 201, 100, 0.8), /* Increased outward light glow */
+        0 0 30px 15px rgba(23, 201, 100, 0.6), /* Additional glow layer */
+        0 4px 12px rgba(0, 0, 0, 0.1);       /* Subtle depth shadow */
+    transition: border 0.05s, box-shadow 0.18s;
+}
+
+/* Phone Number */
+.phone-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #333;
+    letter-spacing: 1px;
+}
+
+/* AI Agent Image */
+.ai-agent-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 40px 0;
+}
+
+.ai-agent-image {
+    width: 300px;
+    height: auto;
+    max-width: 100%;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+/* Call Button */
+.btn-call {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    padding: 15px 40px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-call:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+    color: white;
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4c93 100%);
+}
+
+/* Feature Icons */
+.feature-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px auto;
+    font-size: 1.5rem;
+    color: white;
+    transition: transform 0.3s ease;
+}
+
+.feature-icon:hover {
+    transform: scale(1.1);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .page-container {
+        width: 95% !important;
+        padding: 40px 30px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .page-container {
+        width: 95% !important;
+        padding: 30px 20px !important;
+    }
+    
+    .phone-number {
+        font-size: 2rem;
+    }
+    
+    .ai-agent-image {
+        width: 250px;
+    }
+    
+    .btn-call {
+        padding: 12px 30px;
+        font-size: 1rem;
+    }
+    
+    .headset-icon-container {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .headset-icon-container .fa-headset {
+        font-size: 1.8rem;
+    }
+    
+    .phone-number-tile {
+        padding: 15px 20px;
+    }
+    
+    .phone-number {
+        font-size: 1.5rem;
+    }
+    
+    .mb-5.d-flex {
+        flex-direction: column;
+        gap: 20px !important;
+        align-items: center !important;
+    }
+}
+</style>
+
+</body>
+</html>
