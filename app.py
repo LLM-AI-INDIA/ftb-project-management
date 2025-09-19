@@ -723,7 +723,7 @@ def qa_api():
 @app.route("/qa_operations_api", methods=["POST"])
 @login_required
 def qa_operations_endpoint():
-    """API endpoint for operations QA with operations-specific search"""
+    """API endpoint for operations QA - INDEPENDENT VERSION"""
     global operations_processor
     
     try:
@@ -732,7 +732,7 @@ def qa_operations_endpoint():
         if not query or not query.strip():
             return jsonify({"answer": "Please provide a valid question."})
         
-        print(f"\n=== OPERATIONS QA ENDPOINT ===")
+        print(f"\n=== OPERATIONS QA ENDPOINT (INDEPENDENT) ===")
         print(f"User query: '{query}'")
         
         http_server_url = "http://0.0.0.0:8000"
@@ -740,30 +740,32 @@ def qa_operations_endpoint():
         if not claude_client:
             return jsonify({"answer": "Claude API service not available."})
         
-        # Initialize operations processor if not exists
+        # Initialize operations processor independently
         if operations_processor is None:
-            operations_processor = OperationsDocumentProcessor(http_server_url, claude_client)
-            print("New operations session started")
+            # Use the original ClaudeDocumentProcessor for operations too
+            from claude_processor import ClaudeLikeDocumentProcessor
+            operations_processor = ClaudeLikeDocumentProcessor(http_server_url, claude_client)
+            print("New operations session started with ClaudeDocumentProcessor")
         else:
             print(f"Continuing operations session - {len(operations_processor.session_context['files_mentioned'])} files in context")
         
-        # Process query iteratively using operations-specific processor
+        # Process query iteratively using ClaudeDocumentProcessor
+        print("Processing operations query with ClaudeDocumentProcessor...")
         response = operations_processor.process_query_iteratively(query)
         
-        # Only attempt to extract REAL data from the response - no fallbacks
-        print("Attempting to extract visualization data from actual response...")
+        # Extract visualization data
         viz_data = extract_viz_data_from_response(response, query)
         
         if viz_data:
-            print(f"Found real data for visualization: {list(viz_data.keys())}")
+            print(f"Found operations visualization data: {list(viz_data.keys())}")
         else:
-            print("No real data found for visualization")
+            print("No operations visualization data found")
         
         return jsonify({
-            "answer": response,
+            "answer": response,  # Full detailed response
             "visualization": viz_data,
             "has_visualization": viz_data is not None,
-            "source": "operations"
+            "source": "operations_claude_processor"
         })
         
     except Exception as e:
