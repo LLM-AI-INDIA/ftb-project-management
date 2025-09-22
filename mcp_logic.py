@@ -42,9 +42,11 @@ def detect_visualization_intent(query: str) -> str:
 
 
 # ---------- Tool Discovery ----------
+
+
 async def _discover_tools(server_url="http://0.0.0.0:8080") -> dict:
+    """Asynchronously discovers available tools from the MCP server."""
     try:
-        # Add trailing slash to avoid 307 redirects
         transport = StreamableHttpTransport(f"{server_url}/mcp/")
         async with Client(transport) as client:
             tools = await client.list_tools()
@@ -54,6 +56,7 @@ async def _discover_tools(server_url="http://0.0.0.0:8080") -> dict:
         return {}
 
 def discover_tools(server_url="http://0.0.0.0:8080") -> dict:
+    """Synchronous wrapper for tool discovery."""
     return asyncio.run(_discover_tools(server_url))
 
 def generate_tool_descriptions(tools_dict: dict) -> str:
@@ -226,7 +229,7 @@ Please respond naturally and reference prior conversation context where helpful.
 # ---------- Visualization ----------
 def generate_visualization(data: any, user_query: str, tool: str) -> tuple:
     if not anthropic_client:
-        return None, None
+        return None, None # Returns a tuple of Nones if the client is not initialized
 
     context = {
         "user_query": user_query,
@@ -238,46 +241,45 @@ def generate_visualization(data: any, user_query: str, tool: str) -> tuple:
     system_prompt = """
     You are a JavaScript dashboard designer and visualization expert.
 
-⚡ ALWAYS!!! generate a FULL, self-contained HTML document with:
-- <!DOCTYPE html>, <html>, <head>, <body>, and </html> tags included.
-- <style> for modern responsive CSS (gradient backgrounds, glassmorphism cards, shadows, rounded corners).
-- <script> with all JavaScript logic inline (no external JS files except Chart.js).
-- At least two charts (bar, pie, or line) using Chart.js (CDN: https://cdn.jsdelivr.net/npm/chart.js).
-- Summary stat cards (totals, averages, trends).
-- Optional dynamic lists or tables derived from the data.
-- Smooth animations, styled tooltips, and responsive resizing.
+    ⚡ ALWAYS!!! generate a FULL, self-contained HTML document with:
+    - <!DOCTYPE html>, <html>, <head>, <body>, and </html> tags included.
+    - <style> for modern responsive CSS (gradient backgrounds, glassmorphism cards, shadows, rounded corners).
+    - <script> with all JavaScript logic inline (no external JS files except Chart.js).
+    - At least two charts (bar, pie, or line) using Chart.js (CDN: https://cdn.jsdelivr.net/npm/chart.js).
+    - Summary stat cards (totals, averages, trends).
+    - Optional dynamic lists or tables derived from the data.
+    - Smooth animations, styled tooltips, and responsive resizing.
 
-📌 RULES:
-1. Output ONLY raw HTML, CSS, and JS (no markdown, no explanations).
-2. Charts must have fixed max height (350–400px).
-3. The document is INVALID unless it ends with </html>. Do not stop early.
-4. Always close all opened tags and brackets in HTML, CSS, and JS.
-5. The final deliverable must run directly in a browser without edits.
+    📌 RULES:
+    1. Output ONLY raw HTML, CSS, and JS (no markdown, no explanations).
+    2. Charts must have fixed max height (350–400px).
+    3. The document is INVALID unless it ends with </html>. Do not stop early.
+    4. Always close all opened tags and brackets in HTML, CSS, and JS.
+    5. The final deliverable must run directly in a browser without edits.
 
-🎨 Design:
-- Use a clean dashboard layout with cards, charts, and tables.
-- Gradient backgrounds, glassmorphism effects, shadows, rounded corners.
-- Gradient or neon text for headings and KPI values.
-- Responsive layout for both desktop and mobile.
+    🎨 Design:
+    - Use a clean dashboard layout with cards, charts, and tables.
+    - Gradient backgrounds, glassmorphism effects, shadows, rounded corners.
+    - Gradient or neon text for headings and KPI values.
+    - Responsive layout for both desktop and mobile.
 
-❌ Never truncate output.
-✅ Always finish the document properly with </html>.
-"""
-    
+    ❌ Never truncate output.
+    ✅ Always finish the document properly with </html>.
+    """
 
     user_prompt = f"""
     Create an interactive visualization for this data:
-    
+
     User Query: "{user_query}"
     Tool Used: {tool}
     Data Type: {context['data_type']}
     Data Sample: {json.dumps(context['data_sample'], indent=2)}
-    
+
     📌 Requirements:
-- Return a COMPLETE, browser-ready HTML document.
-- Include <style> and <script> inline.
-- Close all tags properly.
-- End ONLY with </html>.
+    - Return a COMPLETE, browser-ready HTML document.
+    - Include <style> and <script> inline.
+    - Close all tags properly.
+    - End ONLY with </html>.
     Generate a comprehensive visualization that helps understand the data.
     Focus on the most important insights from the query.
     Make sure charts have fixed heights and don't overflow.
@@ -291,9 +293,13 @@ def generate_visualization(data: any, user_query: str, tool: str) -> tuple:
             messages=[{"role": "user", "content": user_prompt}],
         )
         viz_code = resp.content[0].text.strip()
-        return viz_code, viz_code
-    except Exception:
-        return None, None
+        print("LLM successfully generated visualization code.")
+        return viz_code
+    except Exception as e:
+        print(f"Error in LLM visualization generation: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
 
 # Updated generate_table_description function
 def generate_table_description(df: pd.DataFrame, content: dict, action: str, tool: str, user_query: str) -> str:
@@ -333,3 +339,21 @@ def generate_table_description(df: pd.DataFrame, content: dict, action: str, too
         # Fallback to a simple message if the LLM call fails
         return f"Successfully retrieved {record_count} records from the database."
 
+def list_available_tools(available_tools: dict) -> str:
+    """
+    Formats the dictionary of available tools into a human-readable string.
+    
+    Args:
+        available_tools (dict): A dictionary mapping tool names to descriptions.
+        
+    Returns:
+        str: A formatted string listing the available tools, or an error message if none are found.
+    """
+    if not available_tools:
+        return "I'm sorry, no tools are currently available. Please check the MCP server connection."
+    
+    formatted_list = "Here are the available tools:\n"
+    for name, desc in available_tools.items():
+        formatted_list += f"- **{name}**: {desc}\n"
+    
+    return formatted_list

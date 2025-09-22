@@ -558,6 +558,7 @@ def logout():
     logout_user()
     return redirect(url_for("login"))
 
+import mcp_logic
 @app.route("/insights")
 @login_required
 def insights():
@@ -570,83 +571,104 @@ def insights_api():
         query = request.json.get("query")
         if not query:
             return jsonify({"answer": "Please enter a valid query."})
-        
+
+        # --- Intercept the meta-query BEFORE calling the LLM ---
+        if "list" in query.lower() and ("tool" in query.lower() or "database" in query.lower() or "source" in query.lower()):
+            mcp_server_url = os.environ.get("MCP_SERVER_URL", "http://0.0.0.0:8080")
+            available_tools = mcp_logic.discover_tools(mcp_server_url)
+
+            # Use the new function to format the list
+            formatted_list = mcp_logic.list_available_tools(available_tools)
+            
+            return jsonify({"answer": formatted_list})
+
         mcp_server_url = os.environ.get("MCP_SERVER_URL", "http://localhost:8080")
-        
-        # Discover tools and parse query (keep existing code...)
-        available_tools = discover_tools(mcp_server_url)
+        available_tools = mcp_logic.discover_tools(mcp_server_url)
         if not available_tools:
             available_tools = {
                 "Bigquery_Customer": "Customer data queries",
-                "Cloud_SQL_Product": "Product catalog queries", 
+                "Cloud_SQL_Product": "Product catalog queries",
                 "SAP_Hana_Sales": "Sales transaction queries",
                 "Oracle_CustomerFeedback": "Customer feedback queries",
                 "amazon_redshift_CustomerCallLog": "Customer service call logs"
             }
-        
-        parsed = parse_user_query(query, available_tools)
+
+        parsed = mcp_logic.parse_user_query(query, available_tools)
         if "error" in parsed:
             return jsonify({"answer": parsed["error"]})
-        
+
         tool = parsed.get("tool")
         sql = parsed.get("sql")
-        
+
         if not tool or not sql:
             return jsonify({"answer": "Could not parse your query. Please try rephrasing."})
-        
-        # Call MCP tool
-        data = call_tool_with_sql(tool, sql, mcp_server_url)
-        
+
+        data = mcp_logic.call_tool_with_sql(tool, sql, mcp_server_url)
+
         answer = None
         html_table = None
-        
-        # Generate response (keep existing code for answer and html_table...)
+        viz_data = None
+        has_visualization = False
+
         if data.get("rows") and len(data["rows"]) > 0:
             try:
                 import pandas as pd
                 df = pd.DataFrame(data["rows"])
-                answer = generate_table_description(df, data, "read", tool, query)
-                html_table = df.head(50).to_html(
-                    classes='table table-striped table-hover',
-                    table_id='data-table',
-                    escape=False,
-                    index=False,
-                    max_rows=50
-                )
+                answer = mcp_logic.generate_table_description(df, data, "read", tool, query)
+
+                # FIX: Remove dual color tone and display all records
+                headers = ''.join([f'<th>{col}</th>' for col in df.columns])
+                rows = ''.join([
+                    f"<tr>{''.join([f'<td>{value}</td>' for value in row])}</tr>"
+                    for row in df.values  # Removed .head(50) to show all records
+                ])
+                
+                html_table = f"""
+                    <div class="mt-2 table-responsive">
+                        <table class="table table-hover" id="data-table">
+                            <thead>
+                                <tr>{headers}</tr>
+                            </thead>
+                            <tbody>
+                                {rows}
+                            </tbody>
+                        </table>
+                    </div>
+                """
+                
+                if mcp_logic.detect_visualization_intent(query) == "Yes":
+                    viz_data = mcp_logic.generate_visualization(data.get('rows'), query, tool)
+                    
+                    if viz_data:
+                        has_visualization = True
+                    else:
+                        print("No visualization data found for this query despite intent.")
+                        if answer is None:
+                            answer = ""
+                        answer += "\n\n⚠️ I was unable to generate a visualization for this request."
+                
             except Exception as e:
-                print(f"Error processing DataFrame: {e}")
-                answer = f"Successfully retrieved {data.get('row_count', 0)} records from the database."
-                html_table = "<div class='alert alert-info'>Data retrieved successfully.</div>"
-        else:
-            answer = generate_llm_response(data, "read", tool, query)
-            html_table = "<div class='alert alert-warning'>No data found for your query.</div>"
-        
-        # NEW: Use the same visualization approach as project/operations
-        viz_data = None
-        if data.get("rows"):
-            try:
-                viz_data = extract_insights_viz_data(data, query, tool)
-                print(f"Viz data keys: {list(viz_data.keys()) if viz_data else 'None'}")
-            except Exception as e:
-                print(f"Error in extract_insights_viz_data: {e}")
+                print(f"Error processing DataFrame or visualization: {e}")
                 import traceback
                 traceback.print_exc()
-        
+                answer = f"Successfully retrieved {data.get('row_count', 0)} records from the database."
+                html_table = f"<div class='alert alert-info'>Data retrieved successfully. Total records: {data.get('row_count', 0)}</div>"
+        else:
+            answer = mcp_logic.generate_llm_response(data, "read", tool, query)
+            html_table = "<div class='alert alert-warning'>No data found for your query.</div>"
+
         return jsonify({
             "answer": answer or "Query processed successfully.",
             "html_table": html_table,
-            "visualization": viz_data,  # Now returns simple data objects like project/operations
-            "has_visualization": viz_data is not None
+            "visualization": viz_data,
+            "has_visualization": has_visualization
         })
-        
+
     except Exception as e:
         print(f"Error in insights_api: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({"answer": f"System error: {str(e)}"})
-
-
-
 
 
 project_processor = None
@@ -681,7 +703,7 @@ def qa_api():
         print(f"\n=== PROJECT MANAGEMENT QA ENDPOINT (CLAUDE PROCESSOR) ===")
         print(f"User query: '{query}'")
         
-        http_server_url = "http://0.0.0.0:8000"
+        http_server_url = "http://13.236.71.93:8000"
         
         if not claude_client:
             return jsonify({"answer": "Claude API service not available."})
@@ -735,7 +757,7 @@ def qa_operations_endpoint():
         print(f"\n=== OPERATIONS QA ENDPOINT (INDEPENDENT) ===")
         print(f"User query: '{query}'")
         
-        http_server_url = "http://0.0.0.0:8000"
+        http_server_url = "http://13.236.71.93:8000"
         
         if not claude_client:
             return jsonify({"answer": "Claude API service not available."})

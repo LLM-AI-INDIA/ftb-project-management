@@ -41,16 +41,16 @@
     </h2>
 
     <!-- Lighter horizontal line -->
-    <div class="horizontal-line" style="height: 4px; width: 90vw; background: #f8f8f8; margin: 30px 0 5px 0; position: relative; left: 50%; right: 50%; transform: translateX(-50%); border: none; margin-bottom: 40px"></div>
+    <div class="horizontal-line" style="height: 4px; width: 90vw; background: #f8f8f8; margin: 30px 0 5px 0; position: relative; left: 50%; right: 50%; transform: translateX(-50%); border: none; margin-bottom: 100px"></div> <!-- Increased margin-bottom -->
 
     <!-- Outer box with same styling as dashboard -->
     <div class="light-border categories-container" style="
         border: 5px solid #ccd0d2;
         border-radius: 22px;
         background: #fff;
-        padding: 25px 50px;
+        padding: 20px;
         margin: 0 auto;
-        width: 920px;
+        width: 1000px; <!-- Increased width -->
         display: block;"
     >
         <div class="row row-cols-1 row-cols-md-3 g-0 categories-grid" style="margin:0;">
@@ -60,7 +60,7 @@
                     <div class="card dashboard-tile">
                         <img src="{{ url_for('static', filename='icons/government.png') }}"
                              alt="Public Services" class="category-icon" style="padding-bottom:2px;">
-			<h3><b>Government</b></h3>
+                        <h3><b>Government</b></h3>
                     </div>
                 </a>
             </div>
@@ -71,7 +71,7 @@
                     <div class="card dashboard-tile">
                         <img src="{{ url_for('static', filename='icons/energy_page2.png') }}"
                              alt="Energy" class="category-icon" style="padding-bottom:1px;">
-			<h3><b>Energy</b></h5>
+                        <h3><b>Energy</b></h5>
                     </div>
                 </a>
             </div>
@@ -82,7 +82,7 @@
                     <div class="card dashboard-tile">
                         <img src="{{ url_for('static', filename='icons/health.png') }}"
                              alt="Health" class="category-icon" style="padding-bottom:1px;">
-			<h3><b>Health</b></h5>
+                        <h3><b>Health</b></h5>
                     </div>
                 </a>
             </div>
@@ -108,9 +108,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 20px;
-    height: 148px;
-    width: 198px;
+    margin: 20px; <!-- Reduced margin -->
+    height: 258px; <!-- Increased height -->
+    width: 248px; <!-- Increased width -->
     box-shadow: none;
     transition: border 0.05s, box-shadow 0.18s;
 }
@@ -125,9 +125,9 @@
 }
 
 /* Mobile responsiveness */
-@media (max-width: 768px) {
+@media (min-width: 768px) {
     .categories-container {
-        width: 95% !important;
+        /*width: 95% !important;*/
         padding: 20px 15px !important;
     }
     
@@ -136,9 +136,10 @@
     }
     
     .dashboard-tile {
-        margin: 10px !important;
-        width: 160px !important;
-        height: 120px !important;
+        width: 210px !important;
+        height: 210px !important;
+        min-width: 210px !important;
+        max-width: 210px !important;
     }
 }
 </style>
