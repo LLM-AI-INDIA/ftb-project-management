@@ -1159,7 +1159,7 @@ function showVisualization(data) {
         chartsCreated++;
       }
     });
-    
+	 
     // Add executive summary if available
     if (data.executive_summary) {
       const summaryDiv = document.createElement('div');
@@ -1223,12 +1223,51 @@ function closeVisualization() {
   visualizationSection.classList.remove('show');
 }
 
+function showHTMLVisualization(htmlVisualization) {
+  console.log('Showing HTML visualization');
+  // Clear previous charts
+  visualizationContent.innerHTML = '';
+  // Create iframe
+  const iframe = document.createElement('iframe');
+  iframe.style.width = '100%';
+  iframe.style.height = '100%';
+  iframe.style.border = 'none';
+  iframe.style.borderRadius = '8px';
+  iframe.srcdoc = htmlVisualization;
+  visualizationContent.appendChild(iframe);
+  // Open side panel
+  visualizationSection.classList.add('show');
+ }
+      
 function showVisualizationFromBackend() {
   if (window.currentVisualizationData) {
     showVisualization(window.currentVisualizationData);
   } else {
     console.log('No currentVisualizationData available');
   }
+}
+
+function showHTMLVisualizationInSidePanel(htmlVisualization) {
+  console.log('Showing HTML visualization in side panel');
+  
+  // Clear the visualization content
+  visualizationContent.innerHTML = '';
+  
+  // Create iframe for HTML visualization
+  const iframe = document.createElement('iframe');
+  iframe.style.width = '100%';
+  iframe.style.height = '100%';
+  iframe.style.border = 'none';
+  iframe.style.borderRadius = '8px';
+  iframe.setAttribute('srcdoc', htmlVisualization);
+  
+  // Add iframe to the side panel
+  visualizationContent.appendChild(iframe);
+  
+  // Show the side panel
+  visualizationSection.classList.add('show');
+  
+  console.log('HTML visualization displayed in side panel');
 }
 
 
@@ -1255,7 +1294,7 @@ form.addEventListener('submit', async (e) => {
   document.getElementById('input-loading').style.display = 'block';
 
   try {
-    const response = await fetch('/qa_operations_api', {
+    const response = await fetch('/qa_operations_api', {  // This URL is correct
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query: userMessage })
@@ -1276,12 +1315,12 @@ form.addEventListener('submit', async (e) => {
       </div>
       <div class="message-content">
         ${formattedAnswer}
+        ${data.html_table || ''}  <!-- Add HTML table support -->
         ${data.has_visualization ? '<button class="viz-toggle-btn" onclick="showVisualizationFromBackend()"><i class="fas fa-chart-line"></i> Show Chart</button>' : ''}
       </div>
     `;
     chatWindow.appendChild(botDiv);
 
-    // Scroll after bot response
     scrollToBottom();
 
     // Add debug info if available (keep hidden)
@@ -1311,11 +1350,17 @@ form.addEventListener('submit', async (e) => {
     window.currentVisualizationData = data.visualization;
     
     // Auto-show visualization if available
-    if (data.has_visualization && data.visualization) {
-      console.log('Auto-showing visualization');
-      showVisualization(data.visualization);
+    if (data.has_visualization) {
+      if (data.html_visualization) {
+        // Handle rich HTML visualization from MCP
+        window.currentVisualizationData = { html: data.html_visualization };
+        showHTMLVisualization(data.html_visualization);
+      } else if (data.visualization) {
+        // Handle legacy chart data
+        window.currentVisualizationData = data.visualization;
+        showVisualization(data.visualization);
+      }
     }
-
     // Final scroll to ensure everything is visible
     scrollToBottom();
 

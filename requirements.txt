@@ -1,9 +1,10 @@
 anthropic==0.68.0
-fastapi==0.116.2
+docx==0.2.4
+fastapi==0.117.1
 fastmcp==2.12.3
 Flask==3.1.2
 Flask_Login==0.6.3
-google_api_python_client==2.181.0
+google_api_python_client==2.182.0
 google_auth_oauthlib==1.2.2
 langchain_core==0.3.76
 langchain_openai==0.3.33
@@ -14,8 +15,7 @@ protobuf==6.32.1
 pydantic==2.11.9
 PyPDF2==3.0.1
 python-dotenv==1.1.1
-python_docx==1.1.2
-python_pptx==1.0.2
 Requests==2.32.5
-uvicorn==0.35.0
+uvicorn==0.36.0
 google-cloud-bigquery
+gunicorn==21.2.0

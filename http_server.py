@@ -213,12 +213,123 @@ async def list_files(query: str = None, max_results: int = 100):
         logger.error(f"Error listing files: {e}")
         return {"success": False, "error": str(e)}
 
+# ------------------------------------------------------------------
+#  NEW: small MCP-JSON-RPC router (optional – keeps HTTP working)
+# ------------------------------------------------------------------
+from fastapi import WebSocket, WebSocketDisconnect
+from pydantic import BaseModel, Field
+import uuid
+
+class JSONRPCRequest(BaseModel):
+    jsonrpc: str = "2.0"
+    id: str | int | None = None
+    method: str
+    params: dict | list | None = None
+
+class JSONRPCResponse(BaseModel):
+    jsonrpc: str = "2.0"
+    id: str | int | None = None
+    result: dict | None = None
+    error: dict | None = None
+
+# very small state-machine for one client
+mcp_state = {"initialised": False}
+
+@app.websocket("/mcp")
+async def mcp_ws(websocket: WebSocket):
+    """Native MCP WebSocket channel (optional)."""
+    await websocket.accept()
+    try:
+        while True:
+            raw = await websocket.receive_json()
+            req = JSONRPCRequest(**raw)
+
+            if req.method == "initialize":
+                mcp_state["initialised"] = True
+                await websocket.send_json(
+                    JSONRPCResponse(
+                        id=req.id,
+                        result={
+                            "protocolVersion": "2025-06-18",
+                            "capabilities": {},
+                            "serverInfo": {"name": "gdrive-mcp", "version": "0.1.0"},
+                        },
+                    ).dict(exclude_none=True)
+                )
+                continue
+
+            if req.method == "tools/list":
+                await websocket.send_json(
+                    JSONRPCResponse(
+                        id=req.id,
+                        result={
+                            "tools": [
+                                {
+                                    "name": "search_gdrive_files",
+                                    "description": "Search Google Drive files",
+                                    "inputSchema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "query": {"type": "string"},
+                                            "max_results": {"type": "integer"},
+                                        },
+                                    },
+                                },
+                                {
+                                    "name": "read_gdrive_file",
+                                    "description": "Read a Google Drive file",
+                                    "inputSchema": {
+                                        "type": "object",
+                                        "properties": {"file_id": {"type": "string"}},
+                                        "required": ["file_id"],
+                                    },
+                                },
+                            ]
+                        },
+                    ).dict(exclude_none=True)
+                )
+                continue
+
+            # Unknown method
+            await websocket.send_json(
+                JSONRPCResponse(
+                    id=req.id,
+                    error={"code": -32601, "message": "Method not found"},
+                ).dict(exclude_none=True)
+            )
+    except WebSocketDisconnect:
+        pass
+
+
+# ------------------------------------------------------------------
+#  FIXED: non-blocking start-up + correct event-loop policy
+# ------------------------------------------------------------------
+import asyncio, sys, threading, time
+
+def _warm_google_drive():  # runs in a thread
+    try:
+        gdrive_server.initialize_drive_service()
+        logger.info("Google Drive service warmed-up successfully")
+    except Exception as exc:
+        logger.error("Background Drive init failed: %s", exc)
+
+
+def _set_event_loop_policy():
+    """Selector event-loop for Python ≥ 3.10 (Windows & Linux)."""
+    if sys.version_info >= (3, 10):
+        policy = asyncio.WindowsSelectorEventLoopPolicy() if sys.platform == "win32" else asyncio.DefaultEventLoopPolicy()
+        asyncio.set_event_loop_policy(policy)
+
+
 if __name__ == "__main__":
-    logger.info("Starting Google Drive HTTP server...")
+    _set_event_loop_policy()                       # 1. fix hang
+    threading.Thread(target=_warm_google_drive, daemon=True).start()  # 2. don’t block
+    time.sleep(0.25)                               # tiny head-start
+    logger.info("Starting Google Drive HTTP/MCP server …")
     uvicorn.run(
-        "http_server:app", 
-        host="0.0.0.0", 
-        port=8000, 
+        "http_server:app",
+        host="0.0.0.0",
+        port=8000,
         reload=True,
-        log_level="info"
+        log_level="info",
     )

@@ -127,13 +127,14 @@
 .qa-selection-popup {
     position: absolute;
     top: 50%;
-    left: -320px; /* Position to the left of the container */
+    right: 100%;
+    margin-right: 15px;
     transform: translateY(-50%);
-    width: 300px;
+    width: 200px; /* Reduced from 240px */
     background: white;
     border: 2px solid #d1d5db;
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.18);
     z-index: 1000;
     animation: slideIn 0.3s ease-out;
 }
@@ -141,7 +142,7 @@
 @keyframes slideIn {
     from {
         opacity: 0;
-        transform: translateY(-50%) translateX(-20px);
+        transform: translateY(-50%) translateX(20px);
     }
     to {
         opacity: 1;
@@ -156,31 +157,35 @@
 .popup-header {
     background: #667eea;
     color: white;
-    padding: 15px 20px;
-    border-radius: 13px 13px 0 0;
+    padding: 10px 12px; /* Reduced padding */
+    border-radius: 8px 8px 0 0;
     display: flex;
-    justify-content: space-between;
+    justify-content: center; /* Center the header */
     align-items: center;
+    position: relative; /* For absolute positioning of close button */
 }
 
 .popup-header h5 {
     margin: 0;
-    font-size: 1.1rem;
+    font-size: 0.85rem; /* Smaller font */
     font-weight: 600;
+    text-align: center;
 }
 
 .close-popup {
     background: none;
     border: none;
     color: white;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     cursor: pointer;
     padding: 0;
-    width: 25px;
-    height: 25px;
+    width: 20px;
+    height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
+    position: absolute; /* Position absolutely */
+    right: 8px; /* Position on the right */
 }
 
 .close-popup:hover {
@@ -189,16 +194,16 @@
 }
 
 .popup-body {
-    padding: 20px;
+    padding: 10px; /* Reduced padding */
 }
 
 .qa-option {
     display: flex;
     align-items: center;
-    padding: 15px;
-    border: 2px solid #e9ecef;
-    border-radius: 10px;
-    margin-bottom: 15px;
+    padding: 8px; /* Reduced padding */
+    border: 1px solid #e9ecef; /* Thinner border */
+    border-radius: 6px;
+    margin-bottom: 8px; /* Reduced margin */
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -214,32 +219,29 @@
 }
 
 .qa-option-icon {
-    margin-right: 15px;
-    font-size: 1.5rem;
+    margin-right: 8px; /* Reduced margin */
+    font-size: 1.1rem; /* Smaller icon */
     color: #667eea;
-    width: 30px;
+    width: 20px; /* Smaller width */
     text-align: center;
+    flex-shrink: 0; /* Prevent shrinking */
 }
 
 .qa-option-text h6 {
-    margin: 0 0 2px 0;
+    margin: 0 0 1px 0;
     font-weight: 600;
     color: #333;
+    font-size: 0.75rem; /* Smaller heading */
+    line-height: 1.2;
 }
 
 .qa-option-text small {
     color: #666;
-    font-size: 12px;
+    font-size: 0.65rem; /* Smaller description text */
+    line-height: 1.2;
 }
 
-/* Responsive adjustments */
-@media (max-width: 1200px) {
-    .qa-selection-popup {
-        left: -280px;
-        width: 260px;
-    }
-}
-
+/* Only center on very small screens */
 @media (max-width: 768px) {
     .qa-selection-popup {
         position: fixed;
@@ -247,11 +249,23 @@
         left: 50%;
         transform: translate(-50%, -50%);
         width: 90%;
-        max-width: 300px;
+        max-width: 250px;
+        right: auto;
+        margin-right: 0;
+    }
+
+    .popup-overlay {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
     }
 }
 
-/* Overlay for mobile */
 .popup-overlay {
     display: none;
     position: fixed;
@@ -265,7 +279,6 @@
 
 .popup-overlay.show {
     display: block;
-}
 </style>
 
 <script>

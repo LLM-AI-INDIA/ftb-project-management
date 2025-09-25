@@ -740,22 +740,26 @@ window.addEventListener('load', () => promptInput.focus());
 // Enhanced formatResponse function with proper markdown table support
 
 function formatResponse(text) {
-  // Clean technical metadata first
-  let cleaned = text
-    .replace(/---[\s\S]*?---/g, '')
-    .replace(/Iterative Analysis Complete[\s\S]*?\./g, '')
-    .replace(/Session total:[\s\S]*?\./g, '')
-    .replace(/Files accessed this query:[\s\S]*?\./g, '')
-    .replace(/\d+ iterations, multiple tool calls used[\s\S]*?\./g, '')
-    .replace(/Processing:[\s\S]*?\([^)]*\)/g, '')
-    .replace(/Successfully read and cached:[\s\S]*?\n/g, '')
-    .replace(/Found \d+ files in Google Drive/g, '')
-    .replace(/Comprehensive search found \d+ unique files/g, '')
-    .replace(/\n\s*\n\s*\n+/g, '\n\n')
-    .trim();
+    // Clean up the response by removing ASCII art and excessive formatting
+    let cleaned = text
+        // Remove ASCII bar charts and drawing characters
+        .replace(/[█▄▀▐│┤├┐└┘┌■━┃┏┓┗┛┣┫┳┻╋╏═╔╗╚╝╠╣╦╩╬]/g, '')
+        // Remove lines that are mostly ASCII characters
+        .replace(/^[━─═\-_]{10,}$/gm, '')
+        // Remove multiple consecutive line breaks
+        .replace(/\n\s*\n\s*\n+/g, '\n\n')
+        // Remove metadata
+        .replace(/---[\s\S]*?---/g, '')
+        .replace(/Iterative Analysis Complete[\s\S]*?\./g, '')
+        .replace(/Session total:[\s\S]*?\./g, '')
+        .trim();
 
-  // Just return as simple text with basic line breaks - NO markdown processing
-  return cleaned.replace(/\n/g, '<br>');
+    // Convert to HTML with better formatting
+    return cleaned
+        .replace(/## (.*)/g, '<h3>$1</h3>')  // Convert markdown headers
+        .replace(/### (.*)/g, '<h4>$1</h4>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // Bold text
+        .replace(/\n/g, '<br>');
 }
 
 
@@ -1225,13 +1229,37 @@ function closeVisualization() {
 }
 
 function showVisualizationFromBackend() {
-  if (window.currentVisualizationData) {
+  if (window.currentHTMLVisualization) {
+    showHTMLVisualizationInSidePanel(window.currentHTMLVisualization);
+  } else if (window.currentVisualizationData) {
     showVisualization(window.currentVisualizationData);
   } else {
-    console.log('No currentVisualizationData available');
+    console.log('No visualization data available');
   }
 }
 
+function showHTMLVisualizationInSidePanel(htmlVisualization) {
+  console.log('Showing HTML visualization in side panel');
+  
+  // Clear the visualization content
+  visualizationContent.innerHTML = '';
+  
+  // Create iframe for HTML visualization
+  const iframe = document.createElement('iframe');
+  iframe.style.width = '100%';
+  iframe.style.height = '100%';
+  iframe.style.border = 'none';
+  iframe.style.borderRadius = '8px';
+  iframe.setAttribute('srcdoc', htmlVisualization);
+  
+  // Add iframe to the side panel
+  visualizationContent.appendChild(iframe);
+  
+  // Show the side panel
+  visualizationSection.classList.add('show');
+  
+  console.log('HTML visualization displayed in side panel');
+}
 
 
 form.addEventListener('submit', async (e) => {
@@ -1250,9 +1278,7 @@ form.addEventListener('submit', async (e) => {
   chatWindow.appendChild(userDiv);
   promptInput.value = '';
   
-  // Immediate scroll after user message
   scrollToBottom();
-
   document.getElementById('input-loading').style.display = 'block';
 
   try {
@@ -1277,26 +1303,27 @@ form.addEventListener('submit', async (e) => {
       </div>
       <div class="message-content">
         ${formattedAnswer}
-        ${data.has_visualization ? '<button class="viz-toggle-btn" onclick="showVisualizationFromBackend()"><i class="fas fa-chart-line"></i> Show Chart</button>' : ''}
+        ${(data.has_visualization || data.html_visualization) ? '<button class="viz-toggle-btn" onclick="showVisualizationFromBackend()"><i class="fas fa-chart-line"></i> Show Chart</button>' : ''}
       </div>
     `;
     chatWindow.appendChild(botDiv);
 
-    // Scroll after bot response
     scrollToBottom();
 
-    // Add debug info if available (keep hidden)
-    if (data.debug_info) {
-      const debugDiv = document.createElement('div');
-      debugDiv.className = 'debug-info';
-      debugDiv.innerHTML = `
-        Debug: Viz=${data.debug_info.has_viz_keyword}, Data=${data.debug_info.has_data_keyword}, 
-        Numerical=${data.debug_info.has_numerical_data}, Charts=${data.debug_info.viz_charts_generated}
-      `;
-      debugDiv.style.display = 'none'; // Keep hidden
-      chatWindow.appendChild(debugDiv);
+    // Store both types of visualization data
+    window.currentVisualizationData = data.visualization;
+    window.currentHTMLVisualization = data.html_visualization;
+    
+    // Auto-show visualization in the SIDE PANEL (not inline)
+    if (data.html_visualization) {
+      console.log('Auto-showing HTML visualization in side panel');
+      showHTMLVisualizationInSidePanel(data.html_visualization);
+    } else if (data.has_visualization && data.visualization) {
+      console.log('Auto-showing Chart.js visualization in side panel');
+      showVisualization(data.visualization);
     }
 
+    // Add feedback buttons
     const feedbackDiv = document.createElement('div');
     feedbackDiv.className = 'feedback-row';
     feedbackDiv.innerHTML = `
@@ -1309,21 +1336,11 @@ form.addEventListener('submit', async (e) => {
     `;
     chatWindow.appendChild(feedbackDiv);
 
-    window.currentVisualizationData = data.visualization;
-    
-    // Auto-show visualization if available
-    if (data.has_visualization && data.visualization) {
-      console.log('Auto-showing visualization');
-      showVisualization(data.visualization);
-    }
-
-    // Final scroll to ensure everything is visible
     scrollToBottom();
 
-} catch (error) {
+  } catch (error) {
     document.getElementById('input-loading').style.display = 'none';
     console.error('Detailed error:', error);
-    console.error('Error stack:', error.stack);
     
     const errorDiv = document.createElement('div');
     errorDiv.className = 'message bot-message';
@@ -1338,6 +1355,9 @@ form.addEventListener('submit', async (e) => {
     scrollToBottom();
   }
 });
+
+      
+
 
 // Improved scrolling function
 function scrollToBottom() {
